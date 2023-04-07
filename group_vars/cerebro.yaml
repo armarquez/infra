@@ -1,0 +1,20 @@
+---
+
+  ###
+  # - service_name:
+  #   active: false
+  #   image:
+  #   container_name: #optional - only required if diff to service_name
+  #   labels:
+  #     - traefik.enable=true
+  #     - "traefik.http.routers.XXXXXXXX.rule=Host(`wiki.{{ local_domain }}`)"
+  #     - traefik.http.routers.XXXXXXX.entrypoints=websecure
+  #     - traefik.http.routers.XXXXXXX.tls.certresolver=cloudflare
+  #     - traefik.http.services.XXXXXXX.loadbalancer.server.port=80
+  #     #- traefik.http.routers.XXXXXXX.middlewares=authelia@docker
+  #   volumes:
+  #     - "{{ appdata_path }}/app:/config"
+  #   environment:
+  #     -
+  #   include_global_env_vars: #optional - defaults to false
+  #   restart: unless-stopped

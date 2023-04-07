@@ -1,0 +1,6 @@
+---
+
+target_os: debian #proxmox
+hostname_phoneix: phoenix
+main_username: boogey
+

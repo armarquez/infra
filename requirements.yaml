@@ -1,2 +1,10 @@
+---
 roles:
-  - src: geerlingguy.ntp
+  - src: ironicbadger.docker_compose_generator
+  - src: ironicbadger.proxmox_nag_removal
+
+  - src: geerlingguy.docker
+  - src: geerlingguy.dotfiles
+
+  - src: singleplatform-eng.users
+  - src: grog.package

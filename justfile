@@ -14,16 +14,20 @@ log := "warn"
 
 export JUST_LOG := log
 
+# List recipes by default
+default:
+  just --list
+
+# Run defined Ansible playbook for HOST
 run HOST *TAGS:
   ansible-playbook -b run.yaml --limit {{HOST}} {{TAGS}}
 
-
-
 ## repo stuff
-# optionally use --force to force reinstall all requirements
-reqs FORCE:
+# install requirements
+reqs *FORCE:
 	ansible-galaxy install -r requirements.yaml {{FORCE}}
 
-# just vault (encrypt/decrypt/edit)
+# perform an action (encrypt/decrypt/edit) on Ansible vault
 vault ACTION:
     EDITOR='code --wait' ansible-vault {{ACTION}} vars/vault.yaml
+
