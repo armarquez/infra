@@ -1,6 +1,18 @@
 ---
 
 target_os: debian #proxmox
-hostname_phoneix: phoenix
-main_username: boogey
 
+# sicruse.powerline-fonts
+powerline_users:
+  - user: "{{ main_username }}"
+
+# geerlingguy.github_users
+github_users_authorized_keys_exclusive: false
+github_users:
+  # You can specify an object with 'name' (required) and 'groups' (optional):
+  - name: "{{ main_username }}"
+    groups: sudo,docker
+
+# mqz-github-keys
+github_key_users:
+  - "{{ main_username }}"

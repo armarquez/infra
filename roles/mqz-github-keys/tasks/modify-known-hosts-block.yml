@@ -1,0 +1,21 @@
+---
+- name: Modify known hosts block
+  block:
+  - name: Get the content of known hosts.
+    shell: "cat {{ outer_item.known_hosts_path | default('~' ~ outer_item ~ '/' ~ '.ssh/known_hosts' | ansible.builtin.expanduser) }} | grep {{ git_server_fqdn }}"
+    register: host_stat
+    failed_when: host_stat.rc > 1
+
+  - name: Modify known hosts.
+    block:
+    - name: Fetch GitHub public key
+      command: "ssh-keyscan -T 10 {{ git_server_fqdn }}"
+      register: keyscan
+
+    - name: Add GitHub public key to ssh known_hosts.
+      lineinfile:
+        path: "{{ outer_item.known_hosts_path | default('~' ~ outer_item ~ '/' ~ '.ssh/known_hosts' | ansible.builtin.expanduser) }}"
+        create: yes
+        line: "{{ item }}"
+      with_items: '{{ keyscan.stdout_lines }}'
+    when: host_stat.rc == 1 

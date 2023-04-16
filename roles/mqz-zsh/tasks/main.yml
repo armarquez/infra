@@ -1,0 +1,58 @@
+---
+# tasks/main.yml
+- name: Ensure git is installed (Fedora).
+  ansible.builtin.dnf:
+    name: git
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+  become: true
+
+- name: Ensure git is installed (Ubuntu).
+  ansible.builtin.apt:
+    name: git
+    state: present
+  when:
+    - ansible_os_family == 'Debian'
+  become: true
+
+- name: Creates dotfiles directory.
+  become_user: "{{ os_username }}"
+  ansible.builtin.file:
+    path: "{{ home_dir }}/.dotfiles"
+    state: directory
+
+- name: Ensure dotfiles repository is cloned locally.
+  become_user: "{{ os_username }}"
+  ansible.builtin.git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "{{ home_dir }}/.dotfiles"
+    version: "{{ dotfiles_repo_version }}"
+    accept_hostkey: "{{ dotfiles_repo_accept_hostkey }}"
+    #key_file: "/root/.ssh/id_rsa"
+
+- name: Ensure Stow installed (Ubuntu).
+  ansible.builtin.apt:
+    name: stow
+    state: present
+  when:
+    - ansible_os_family == 'Debian'
+  become: true
+
+- name: Ensure Stow installed (Fedora).
+  ansible.builtin.dnf:
+    name: stow
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+  become: true
+
+- name: Deploy dotfiles.
+  become_user: "{{ os_username }}"
+  environment:
+    STOW_DIR: "{{ home_dir }}/.dotfiles/{{ zsh_dotfile_package_dir }}"
+  ansible.builtin.shell: |
+    stow --target={{ home_dir }} -v {{ stow_package_name }} 
+  register: result
+  changed_when: 'result.stderr is search("LINK: ")'
+  become: true

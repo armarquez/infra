@@ -1,18 +1,20 @@
 ---
 # generic settings
-main_username: boogey
+main_username: boogeymarquez
 main_groupname: "{{ main_username }}"
 main_uid: "1000"
 main_gid: "{{ main_uid }}"
 
+# singleplatform-eng.users
 users:
   - username: "{{ main_username }}"
     name: "Anthony Marquez"
     groups: ['sudo','systemd-journal']
     uid: 1001
     shell: "/bin/zsh"
+    generate_ssh_key: true
     ssh_key:
-      - "{{ boogey_public_key }}"
+    - ""
 groups_to_create:
   - name: "developers"
     gid: 10000
@@ -73,7 +75,7 @@ security_ssh_usedns: "no"
 security_autoupdate_enabled: true
 security_fail2ban_enabled: true
 security_sudoers_passwordless:
-  - boogey
+  - "{{ main_username }}"
 
 # geerlingguy.docker
 docker_compose_version: v2.17.2
@@ -86,7 +88,7 @@ global_env_vars:
   - "TZ={{ ntp_timezone }}"
 docker_compose_generator_uid: "{{ main_uid }}"
 docker_compose_generator_gid: "{{ main_gid }}"
-docker_compose_generator_output_path: /home/boogey
+docker_compose_generator_output_path: "/home/{{ main_username }}"
 
 ## telegraf
 # telegraf_influxdb_urls:

@@ -1,0 +1,4 @@
+---
+stow_package_name: "{{ zsh_dotfile_package_location | basename }}"
+zsh_dotfile_package_dir: "{{ zsh_dotfile_package_location | dirname }}"
+home_dir: "/home/{{ os_username }}"

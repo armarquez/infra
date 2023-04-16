@@ -5,6 +5,7 @@ Vagrant.configure("2") do |config|
   # Base VM OS configuration.
   config.vm.synced_folder ".", "/vagrant", disabled: true
   config.ssh.insert_key = false
+  config.ssh.forward_agent = true
   
   # General VirtualBox VM configuration.
   config.vm.provider :virtualbox do |vb|
@@ -39,9 +40,11 @@ Vagrant.configure("2") do |config|
       ansible.playbook = "run.yaml"
       ansible.inventory_path = "inventories/vagrant/inventory"
       ansible.limit = "all"
+      ansible.verbose = "-vvvv"
       ansible.extra_vars = {
         ansible_user: 'vagrant',
-        ansible_ssh_private_key_file: "~/.vagrant.d/insecure_private_key",      }
+        ansible_ssh_private_key_file: "~/.vagrant.d/insecure_private_key",
+      }
     end
   end
 end

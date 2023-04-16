@@ -1,7 +1,5 @@
 ---
 
-main_username: boogey
-
 # grog.package
 package_list:
   - name: bash-completion

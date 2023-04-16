@@ -1,0 +1,19 @@
+---
+# tasks/main.yml
+- name: Generate SSH keys for all users as necessary
+  include_tasks: generate-key-block.yml
+  with_items: "{{ github_key_users }}"
+
+- name: Generate known_host file for all users as necessary
+  include_tasks: generate-known-hosts-block.yml
+  with_items: "{{ github_key_users }}"
+
+- name: Generate known_host file for all users as necessary
+  include_tasks: modify-known-hosts-block.yml
+  with_items: "{{ github_key_users }}"
+  loop_control:
+    loop_var: outer_item
+
+- name: Add SSH public key to Github for all users
+  include_tasks: add-public-key-block.yml
+  with_items: "{{ github_key_users }}"

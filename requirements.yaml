@@ -5,6 +5,8 @@ roles:
 
   - src: geerlingguy.docker
   - src: geerlingguy.dotfiles
+  - src: geerlingguy.github-users
 
   - src: singleplatform-eng.users
+  - src: sicruse.powerline-fonts
   - src: grog.package

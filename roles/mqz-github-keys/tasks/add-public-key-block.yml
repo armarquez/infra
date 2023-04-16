@@ -1,0 +1,22 @@
+---
+- name: Add SSH public key block
+  block:
+  - name: Get key content.
+    command: "cat {{ item.ssh_key_path | default('~' ~ item ~ '/' ~ '.ssh/id_rsa' | ansible.builtin.expanduser) }}.pub"
+    register: key_content
+
+  - name: Add SSH public key to GitHub account.
+    uri:
+      url: "https://api.{{ git_server_fqdn }}/user/keys"
+      validate_certs: no
+      method: POST
+      body:
+        title: "{{ item.key_title | default(ansible_hostname ~ '-' ~ item ) }}"
+        key: "{{ key_content.stdout }}"
+      body_format: json
+      headers:
+        Content-Type: "application/json"
+        Authorization: "token {{ github_personal_token }}"
+      status_code:
+      - 201
+      - 422

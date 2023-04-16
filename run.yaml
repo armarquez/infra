@@ -1,26 +1,29 @@
 ---
-  - hosts: phoenix
-    vars_files:
-      - 'vars/vault.yaml'
-    become: true
-    roles:
-      - role: singleplatform-eng.users
-      - role: ironicbadger.proxmox_nag_removal
-      - role: geerlingguy.docker
-      - role: grog.package
+- hosts: phoenix
+  vars_files:
+    - 'vars/vault.yaml'
+  become: true
+  roles:
+    - role: singleplatform-eng.users
+    # - role: ironicbadger.proxmox_nag_removal
+    # - role: geerlingguy.docker
+    # - role: grog.package
+    # - role: sicruse.powerline-fonts
+    - role: mqz-github-keys
+    - role: mqz-zsh
 
 
-  # - hosts: dazzler
-  #   vars_files:
-  #     - 'vars/vault.yaml'
-  #   become: true
-  #   roles:
-  #     - role: geerlingguy.docker
-  #     - role: grog.package
+# - hosts: dazzler
+#   vars_files:
+#     - 'vars/vault.yaml'
+#   become: yes
+#   roles:
+#     - role: geerlingguy.docker
+#     - role: grog.package
 
-  # - hosts: cerebro
-  #   vars_files:
-  #     - 'vars/vault.yaml'
-  #   roles:
-  #     - role: ironicbadger.docker_compose_generator
-  #       tags: compose
+# - hosts: cerebro
+#   vars_files:
+#     - 'vars/vault.yaml'
+#   roles:
+#     - role: ironicbadger.docker_compose_generator
+#       tags: compose
