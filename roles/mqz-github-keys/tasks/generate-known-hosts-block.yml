@@ -2,12 +2,12 @@
 - name: Generate known_hosts block
   block:
   - name: Check if known_host exists.
-    stat:
+    ansible.builtin.stat:
       path: "{{ item.known_hosts_path | default('~' ~ item ~ '/' ~ '.ssh/known_hosts' | ansible.builtin.expanduser) }}"
     register: known_hosts_stat
 
   - name: Create known_hosts if it doesn't exist.
-    file:
+    ansible.builtin.file:
       path: "{{ item.known_hosts_path | default('~' ~ item ~ '/' ~ '.ssh/known_hosts' | ansible.builtin.expanduser) }}"
       state: touch
     when: not known_hosts_stat.stat.exists

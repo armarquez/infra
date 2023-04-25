@@ -2,11 +2,11 @@
 - name: Add SSH public key block
   block:
   - name: Get key content.
-    command: "cat {{ item.ssh_key_path | default('~' ~ item ~ '/' ~ '.ssh/id_rsa' | ansible.builtin.expanduser) }}.pub"
+    ansible.builtin.command: "cat {{ item.ssh_key_path | default('~' ~ item ~ '/' ~ '.ssh/id_rsa' | ansible.builtin.expanduser) }}.pub"
     register: key_content
 
   - name: Add SSH public key to GitHub account.
-    uri:
+    ansible.builtin.uri:
       url: "https://api.{{ git_server_fqdn }}/user/keys"
       validate_certs: no
       method: POST
