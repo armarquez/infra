@@ -5,13 +5,16 @@
 # https://gitlab.com/NickBusey/HomelabOS/-/issues/355
 
 if [ -d .git/ ]; then
-rm .git/hooks/pre-commit
-cat <<EOT >> .git/hooks/pre-commit
-if ( git show :vars/vault.yaml | grep -q "\$ANSIBLE_VAULT;" ); then
-echo "[38;5;108mVault Encrypted. Safe to commit.[0m"
+    if [ -f .git/hooks/pre-commit ]; then
+        rm -f .git/hooks/pre-commit
+    fi
+
+    cat <<'EOT' >> .git/hooks/pre-commit
+if ( git show :ansible/vars/vault.yaml | grep -q "\$ANSIBLE_VAULT;" ); then
+    echo "[38;5;108mVault Encrypted. Safe to commit.[0m"
 else
-echo "[38;5;208mVault not encrypted! Run 'make encrypt' and try again.[0m"
-exit 1
+    echo "[38;5;208mVault not encrypted! Run 'make encrypt' and try again.[0m"
+    exit 1
 fi
 EOT
 

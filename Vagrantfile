@@ -30,8 +30,10 @@ Vagrant.configure("2") do |config|
 
     # Run Ansible provisioner once for all VMs at the end.
     phoenix.vm.provision "ansible" do |ansible|
-      ansible.playbook = "run.yaml"
-      ansible.inventory_path = "inventories/vagrant/inventory"
+      ansible.playbook = "ansible/run.yaml"
+      ansible.config_file = "ansible/ansible.cfg"
+      ansible.inventory_path = "ansible/inventories/vagrant/inventory"
+      ansible.galaxy_roles_path = "ansible/galaxy_roles"
       ansible.limit = "all"
       ansible.verbose = "-v"
       ansible.extra_vars = {
