@@ -1,0 +1,33 @@
+#!/usr/bin/env -S just --justfile
+
+initial_snapshot_name := 'clean'
+
+
+# List recipes by default
+default:
+  just --list
+
+# Install pre-requesites
+pre-reqs:
+  sudo snap install distrobuilder --classic
+  # TODO: Install Incus
+
+# TODO: Create Proxmox image
+
+# TODO: install Incus agent in Proxmox image
+
+# Attach to instance
+attach: HOST
+  incus console {{HOST}} --type=vga
+
+# Create a snapshot
+snapshot HOST NAME:
+  incus snapshot create {{HOST}} {{NAME}}
+
+# Create initial snapshot
+snapshot-initial HOST:
+  just snapshot {{HOST}} {{initial_snapshot_name}}
+
+# Restore instance to snaphot
+restore HOST NAME=initial_snapshot_name:
+  incus snapshot restore {{HOST}} {{NAME}}

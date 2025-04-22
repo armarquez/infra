@@ -1,0 +1,7 @@
+---
+- name: Add SSH public key to Github for all users
+  include_tasks: add-public-key-block.yaml
+  loop: "{{ github_key_users }}"
+  loop_control:
+    loop_var: item
+

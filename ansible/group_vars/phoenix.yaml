@@ -15,4 +15,4 @@ github_users:
 
 # mqz-github-keys
 github_key_users:
-  - "{{ main_username }}"
+  - user: "{{ main_username }}"

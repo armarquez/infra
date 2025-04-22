@@ -1,0 +1,16 @@
+---
+- name: Ensure item contains known_hosts_path
+  ansible.builtin.debug:
+    msg: "Processing item: {{ item }}"
+  when: item.known_hosts_path is not defined
+
+- name: Check if known_hosts file exists
+  ansible.builtin.stat:
+    path: "{{ item.known_hosts_path | default(ansible_env.HOME + '/.ssh/known_hosts') }}"
+  register: known_hosts_stat
+
+- name: Create known_hosts file if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ item.known_hosts_path | default(ansible_env.HOME + '/.ssh/known_hosts') }}"
+    state: touch
+  when: not known_hosts_stat.stat.exists

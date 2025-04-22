@@ -6,28 +6,58 @@
 
 #alias c := check
 
+# Environment Variables
 bt := '0'
-
 export RUST_BACKTRACE := bt
-
 log := "warn"
-
 export JUST_LOG := log
 
 # List recipes by default
 default:
   just --list
 
+# Check if 1Password CLI is installed and authenticated
+check-op:
+  #!/usr/bin/env sh
+  if ! command -v op > /dev/null; then
+    echo "❌ 1Password CLI ('op') is not installed. Please install it first."
+    exit 1
+  fi
+  WHOAMI_OUTPUT="$(op whoami 2>/dev/null)"
+  if [ -z "$WHOAMI_OUTPUT" ]; then
+    echo "❌ 1Password CLI is installed but no authenticated session found. Please run: op signin"
+    exit 1
+  fi
+  echo "✅ 1Password CLI is installed and authenticated as:"
+  echo "$WHOAMI_OUTPUT"
+
+# Ensure Incus instance is running
+check-incus-instance HOST:
+  #!/usr/bin/env sh
+  if ! incus list --format csv | grep -i -q "^{{HOST}},running"; then
+    echo "⚠️  Instance '{{HOST}}' is not running. Starting it now..."
+    incus start {{HOST}}
+    sleep 5  # Give some time for it to start
+  fi
+  echo "✅  Instance '{{HOST}}' is running."
+
+# Run Ansible playbook for Proxmox setup
+setup HOST *TAGS:
+  ansible-playbook -i ./inventories/home-network/inventory-setup.yaml run.yaml --limit {{HOST}} {{TAGS}} --ask-pass -e SETUP=true
+
 # Run defined Ansible playbook for HOST
-run HOST *TAGS:
+run HOST *TAGS: check-op
   ansible-playbook -b run.yaml --limit {{HOST}} {{TAGS}}
 
-## repo stuff
-# install requirements
+# Install Ansible Galaxy requirements
 reqs *FORCE:
-	ansible-galaxy install -r requirements.yaml {{FORCE}}
+  ansible-galaxy install -r requirements.yaml {{FORCE}}
 
-# perform an action (encrypt/decrypt/edit) on Ansible vault
-vault ACTION:
-    EDITOR='code --wait' ansible-vault {{ACTION}} vars/vault.yaml
+# Perform an action (encrypt/decrypt/edit) on Ansible vault
+vault ACTION: check-op
+  EDITOR='code --wait' ansible-vault {{ACTION}} vars/vault.yaml
 
+# Test Ansible playbook for HOST on incus
+test HOST *TAGS:
+  just check-incus-instance {{HOST}}
+  ansible-playbook -i ./inventories/incus/inventory.yaml -b run.yaml --limit {{HOST}} {{TAGS}}

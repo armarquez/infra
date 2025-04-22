@@ -1,0 +1,10 @@
+---
+- name: Fetch SSH public key content
+  command: "cat {{ item.ssh_key_path | default('/home/' + item.user + '/' + ssh_public_key_path) }}"
+  register: key_content
+  failed_when: key_content.rc != 0
+- name: Authorize key with GitHub for all users
+  community.general.github_key:
+    name: "{{ item.key_title | default(ansible_hostname + '-' + item.user) }}"
+    token: '{{ github_personal_token }}'
+    pubkey: "{{ key_content.stdout }}"

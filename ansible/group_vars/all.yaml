@@ -4,6 +4,7 @@ main_username: boogeymarquez
 main_groupname: "{{ main_username }}"
 main_uid: "1000"
 main_gid: "{{ main_uid }}"
+initial_user: root
 
 # singleplatform-eng.users
 users:
@@ -12,9 +13,9 @@ users:
     groups: ['sudo','systemd-journal']
     uid: 1001
     shell: "/bin/zsh"
-    generate_ssh_key: true
-    ssh_key:
-    - ""
+    ssh_key: 
+    - "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    - "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
 groups_to_create:
   - name: "developers"
     gid: 10000

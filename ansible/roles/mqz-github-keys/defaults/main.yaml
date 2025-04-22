@@ -1,0 +1,18 @@
+---
+github_key_users: []
+
+
+  # - name: "{{ ansible_user_id }}"
+  #   # First tilde expands to home dir via expanduser. Others tildes are for concatenation.
+  #   ssh_key_path: "{{ '~' ~ item.user ~ '/' ~ .ssh/id_rsa | ansible.builtin.expanduser }}"
+  #   known_hosts_path: "{{ '~' ~ item.user ~ '/' ~ .ssh/known_hosts | ansible.builtin.expanduser }}"
+  #   #ssh_key_path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+  #   #known_hosts_path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
+  #   key_title: "{{ ansible_hostname }}-{{ ansible_user_id }}"
+  #   ssh_key_comment: "armarquez-github-key"
+
+git_server_fqdn: "github.com"
+
+known_hosts_file: ".ssh/known_hosts"
+
+ssh_public_key_path: ".ssh/id_rsa.pub"

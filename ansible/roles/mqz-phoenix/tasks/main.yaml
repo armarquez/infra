@@ -1,0 +1,54 @@
+---
+# tasks/main.yaml
+# - name: Ensure sudo package is installed (Debian/Ubuntu)
+#   apt:
+#     name: sudo
+#     state: present
+
+# - name: Create admin user 'boogey'
+#   user:
+#     name: boogey
+#     shell: /bin/bash
+#     groups: sudo
+#     append: yes
+#     create_home: yes
+
+# - name: Add SSH key for 'boogey'
+#   authorized_key:
+#     user: boogey
+#     state: present
+#     key: "{{ lookup('file', '~/id_rsa.pub') }}"
+
+# - name: Ensure 'boogey' has passwordless sudo access
+#   lineinfile:
+#     path: /etc/sudoers.d/boogey
+#     line: "boogey ALL=(ALL) NOPASSWD:ALL"
+#     create: yes
+#     validate: 'visudo -cf %s'
+
+# - name: Disable root SSH login
+#   lineinfile:
+#     path: /etc/ssh/sshd_config
+#     regexp: '^PermitRootLogin'
+#     line: 'PermitRootLogin no'
+#     state: present
+#   notify: Restart SSH
+
+# - name: Restart SSH
+#   service:
+#     name: ssh
+#     state: restarted
+#   when: first_run == "true"
+
+- name: Add TerraformProv role
+  command: >
+    pveum role add TerraformProv -privs "Datastore.AllocateSpace Datastore.AllocateTemplate Datastore.Audit Pool.Allocate Sys.Audit Sys.Console Sys.Modify VM.Allocate VM.Audit VM.Clone VM.Config.CDROM VM.Config.Cloudinit VM.Config.CPU VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Migrate VM.Monitor VM.PowerMgmt SDN.Use"
+  changed_when: false
+
+- name: Add terraform-prov user
+  command: pveum user add terraform-prov@pve --password "{{ proxmox_user_password }}"
+  no_log: true
+
+- name: Assign role to user
+  command: pveum aclmod / -user terraform-prov@pve -role TerraformProv
+  changed_when: false

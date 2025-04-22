@@ -7,7 +7,12 @@ roles:
   - src: geerlingguy.dotfiles
   - src: geerlingguy.github-users
   - src: geerlingguy.ntp
+  - src: geerlingguy.security
 
   - src: singleplatform-eng.users
   - src: sicruse.powerline-fonts
   - src: grog.package
+
+collections:
+  - name: community.general
+    version: "10.4"

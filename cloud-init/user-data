@@ -1,0 +1,12 @@
+#cloud-config
+users:
+  - name: boogey
+    shell: /bin/zsh
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    ssh_authorized_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDtsOcrULQYc4/duI4fszSQDYzVVop3LQE3VZbd1eX0c12n/PO9Qz65VjiKnPh4hJLLajZK73wElFwaKBLBDuU0aro2D37NNsZF7AZxGJs3cmWO4HhlTDkkvOCENIxUqb6YHBZS+78VjW/7js3YDB9BtRBjKnVlaKm3HNB67gdrs7ewy2a07AM3308FIYCJj5qcn+7DoXJBI4zWlXvEe2qTgkDMGNGxP31z2qadoQK2isr56w+n4g/ZrczP0AnxIyxLp/d/wjiUpKZOM1W4qF3lNh8psd6aJdO2IhjhK/8Ph10ZNsb4oNyHGTYZ60Jo489rrcqqzRuK7dvw/TKaUn8UmK9T8Cu7iEEntZpmllijabcChbt8s8KVpGSaTE0LmKDcgTlq2FqsRjaURF4FBufGYoFkCeNN2Q1J9wE0IxPbqSGuk2NLQYQbj16gKQiLZWoFNr06nAkuej7hcskqaUiHL9aEg5+eo84Gg/VhAciJOu1Y/+6wrlx6sTVlsqnnwmUzx2Qdl3MhK8Br/bRhprTTAaPXLBSYlTJVlTSYNoDzgYRNKknu6wQsGb9C1YyeDG+5bqpSnw1CVjUV2qwFJWKuOO0ZTO1DVW7ryw/roVBliTz+FU3lvqQ5oWldLp+W8OF7PPPW5wr7gPXAFMjLLxWwKJZIdndTCbFPm1lS+0PWZw== armarquez@gmail.com"
+
+# Ensure the system is up-to-date at first boot
+package_update: true
+package_upgrade: true

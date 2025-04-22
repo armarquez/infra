@@ -1,0 +1,4 @@
+---
+# tasks/main.yaml
+- name: Init
+  include_tasks: 00_init.yaml

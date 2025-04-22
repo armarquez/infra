@@ -2,16 +2,21 @@
 - hosts: phoenix
   vars_files:
     - 'vars/vault.yaml'
+  vars:
+    setup: "{{ lookup('env', 'SETUP') | default('false') }}"
   become: true
   roles:
-    - role: geerlingguy.ntp
-    - role: singleplatform-eng.users
+    # - role: geerlingguy.ntp
+    # - role: singleplatform-eng.users
+    # - role: geerlingguy.security
     # - role: ironicbadger.proxmox_nag_removal
     # - role: geerlingguy.docker
     # - role: grog.package
     # - role: sicruse.powerline-fonts
-    - role: mqz-github-keys
-    - role: mqz-zsh
+    # - role: mqz-github-keys
+    # - role: mqz-zsh
+    - role: mqz-proxmox
+    # - role: mqz-phoenix
 
 
 # - hosts: dazzler

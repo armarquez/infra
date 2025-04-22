@@ -1,0 +1,18 @@
+---
+- name: Check if GitHub is already in known_hosts
+  ansible.builtin.shell: "grep -q {{ git_server_fqdn }} {{ outer_item.known_hosts_path }}"
+  register: host_stat
+  failed_when: host_stat.rc > 1
+
+- name: Fetch GitHub public key
+  ansible.builtin.command: "ssh-keyscan -T 10 {{ git_server_fqdn }}"
+  register: keyscan
+  when: host_stat.rc != 0
+
+- name: Add GitHub public key to known_hosts
+  ansible.builtin.lineinfile:
+    path: "{{ outer_item.known_hosts_path }}"
+    line: "{{ item }}"
+    create: yes
+  loop: "{{ keyscan.stdout_lines }}"
+  when: host_stat.rc != 0
