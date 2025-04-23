@@ -42,7 +42,7 @@ check-incus-instance HOST:
   echo "✅  Instance '{{HOST}}' is running."
 
 # Run Ansible playbook for Proxmox setup
-setup HOST *TAGS:
+setup HOST *TAGS: check-op
   ansible-playbook -i ./inventories/home-network/inventory-setup.yaml run.yaml --limit {{HOST}} {{TAGS}} --ask-pass -e SETUP=true
 
 # Run defined Ansible playbook for HOST
@@ -58,6 +58,6 @@ vault ACTION: check-op
   EDITOR='code --wait' ansible-vault {{ACTION}} vars/vault.yaml
 
 # Test Ansible playbook for HOST on incus
-test HOST *TAGS:
+test HOST *TAGS: check-op
   just check-incus-instance {{HOST}}
   ansible-playbook -i ./inventories/incus/inventory.yaml -b run.yaml --limit {{HOST}} {{TAGS}}

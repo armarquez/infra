@@ -16,8 +16,9 @@ pre-reqs:
 
 # TODO: install Incus agent in Proxmox image
 
+
 # Attach to instance
-attach: HOST
+attach HOST:
   incus console {{HOST}} --type=vga
 
 # Create a snapshot

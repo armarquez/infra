@@ -1,7 +1,9 @@
 all:
-  hosts:
+  children:
     phoenix:
-      ansible_host: phoenix
-      ansible_connection: community.general.incus
-      ansible_become: no
+      hosts:
+        phoenix-host:
+          ansible_host: phoenix
+          ansible_connection: community.general.incus
+          ansible_become: no
 

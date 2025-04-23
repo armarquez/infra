@@ -13,6 +13,58 @@ github_users:
   - name: "{{ main_username }}"
     groups: sudo,docker
 
+# mqz-proxmox
+## General
+backup_etc: true # Backup the /etc directory in Proxmox (backup will be available in the current Ansible directory).
+reboot_system: false # Reboot the system after completing all playbooks.
+update_system_now: false # Update the system immediately after completing all playbooks.
+
+## Users configuration
+initial_user: root # Initial user for the system.
+change_root_password: false # Enable changing the root password.
+new_root_password: P@ssw0rd* # New root password.
+system_user: localuser # Name of the non-root system user.
+enable_system_user_password: true # Enable password authentication for the system user.
+system_user_password: P@ssw0rd* # Password for the system user.
+disable_root_login: false # Disable root login via SSH.
+disable_password_auth: false # Disable password-based SSH authentication.
+pub_keys_folder: pub_keys/ # Folder containing public SSH keys.
+
+## Repository Management
+add_backports_repo: false # Add or remove the Debian backports repository.
+add_pvetest_repo: false # Add or remove the Proxmox test repository.
+system_update_scheduler: false  # Enable automatic system updates.
+update_schedule_time: "6:00"  # Time to install updates (format: HH:MM).
+
+## Kernel Management
+install_specific_kernel: false # Enable installation of a specific kernel version.
+specific_kernel_version: "6.11.0-2-pve-signed" # The specific kernel version to install.
+pin_kernel_enabled: false # Enable pinning a specific kernel version.
+pin_kernel_version: "6.8.12-4-pve" # The kernel version to pin.
+unpin_kernel_enabled: false # Enable unpinning a previously pinned kernel version.
+unpin_kernel_version: "6.8.12-4-pve" # The kernel version to unpin.
+clean_old_kernels: false
+kernels_to_keep: 2
+
+## Kernel Parameters
+default_kernel_params: >
+  quiet pcie_aspm=off intremap=no_x2apic_optout iommu=pt
+  pcie_acs_override=downstream,multifunction pcie_port_pm=off
+  nvme_core.default_ps_max_latency_us=0
+
+## Service management
+apparmor_disable: false # Disable AppArmor.
+fail2ban_enable: false # Install and enable Fail2Ban for security.
+nginx_enable: false # Install and enable Nginx.
+web_show_temperatures: false # Display hardware temperatures in the Proxmox web interface.
+install_stresstest_software: false # Install stress-testing tools like stress-ng.
+install_packages: "" # Specify additional packages to install (e.g., "jq nano").
+uninstall_packages: "" # Specify packages to uninstall.
+
+## SSH configuration
+change_default_ssh_port: false # Enable changing the default SSH port.
+new_ssh_port: 22 # Specify the new SSH port.
+
 # mqz-github-keys
 github_key_users:
   - user: "{{ main_username }}"

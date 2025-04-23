@@ -2,3 +2,15 @@
 # tasks/main.yaml
 - name: Init
   include_tasks: 00_init.yaml
+
+- name: Backup etc
+  include_tasks: 01_backup_etc.yaml
+
+- name: Date timezone
+  include_tasks: 02_date_timezone.yaml
+
+- name: Prepare repos
+  include_tasks: 03_prepare_repos.yaml
+
+- name: Install software
+  include_tasks: 04_install_software.yaml

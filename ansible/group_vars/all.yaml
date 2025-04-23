@@ -4,7 +4,10 @@ main_username: boogeymarquez
 main_groupname: "{{ main_username }}"
 main_uid: "1000"
 main_gid: "{{ main_uid }}"
-initial_user: root
+timezone: "America/Phoenix"
+ntp_servers:
+  - 2.pfsense.pool.ntp.org # Primary NTP server.
+  - 1.pfsense.pool.ntp.org # Tertiary NTP server.
 
 # singleplatform-eng.users
 users:
@@ -65,8 +68,9 @@ environment_config: {
   "PUID": "{{ main_gid }}",
   "PGID": "{{ main_gid }}"
 }
+
 # geerlingguy.ntp
-ntp_timezone: "America/Chicago"
+ntp_timezone: "America/Phoenix"
 
 # geerlingguy.security
 security_ssh_port: 22
