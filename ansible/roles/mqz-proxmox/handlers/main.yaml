@@ -5,3 +5,13 @@
     enabled: true
   when: configure_ntp_servers_result.changed
   changed_when: configure_ntp_servers_result.changed
+
+- name: Restart ssh
+  ansible.builtin.systemd:
+    name: ssh
+    state: restarted
+  notify:
+    - Reset SSH connection
+
+- name: Reset SSH connection
+  ansible.builtin.meta: reset_connection

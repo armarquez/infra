@@ -14,3 +14,9 @@
 
 - name: Install software
   include_tasks: 04_install_software.yaml
+
+- name: Run tasks for init sshd user
+  include_tasks: 05_init_sshd.yaml
+
+- name: Configure-users
+  include_tasks: 06_configure_users.yaml

@@ -41,6 +41,27 @@ check-incus-instance HOST:
   fi
   echo "✅  Instance '{{HOST}}' is running."
 
+# Create a venv if it doesn't exist
+venv:
+  test -d .venv || python3 -m venv .venv
+  .venv/bin/pip install --upgrade pip
+
+# Activate the virtual environment (informational)
+activate:
+  echo "Run 'source .venv/bin/activate' to activate the venv"
+
+# Install prod dependencies
+install-prod: venv
+  .venv/bin/python -c 'import requirements, subprocess; subprocess.run([".venv/bin/pip", "install", *requirements.prod], check=True)'
+
+# Install dev + extras
+install-dev: venv
+  .venv/bin/python -c 'import requirements, subprocess; subprocess.run([".venv/bin/pip", "install", *requirements.dev], check=True)'
+
+# Install just a specific extras group (e.g. test, lint)
+install-extras GROUP: venv
+  .venv/bin/python -c 'import requirements, subprocess, os; subprocess.run([".venv/bin/pip", "install", *requirements.extras[os.environ["GROUP"]]], check=True)'
+
 # Run Ansible playbook for Proxmox setup
 setup HOST *TAGS: check-op
   ansible-playbook -i ./inventories/home-network/inventory-setup.yaml run.yaml --limit {{HOST}} {{TAGS}} --ask-pass -e SETUP=true
@@ -50,7 +71,7 @@ run HOST *TAGS: check-op
   ansible-playbook -b run.yaml --limit {{HOST}} {{TAGS}}
 
 # Install Ansible Galaxy requirements
-reqs *FORCE:
+reqs *FORCE: install-prod
   ansible-galaxy install -r requirements.yaml {{FORCE}}
 
 # Perform an action (encrypt/decrypt/edit) on Ansible vault
