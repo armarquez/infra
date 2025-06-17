@@ -1,0 +1,22 @@
+services:
+  acme-sh:
+    image: neilpang/acme.sh
+    #user: "${PUID:-1030}:${PGID:-101}"
+    container_name: acme.sh
+    network_mode: host
+    command: daemon
+    stdin_open: true
+    tty: true
+    restart: no
+    environment:
+      PUID: "1030"
+      PGID: "101"
+      CF_Token: "<CLOUDFLARE_API_TOKEN>"
+      SYNO_USERNAME: "certadmin"
+      SYNO_PASSWORD: "<CERTADMIN_PASSWORD>"
+      SYNO_CERTIFICATE: "Let's Encrypt"
+      SYNO_CREATE: 1
+      SYNO_SCHEME: "https"
+      SYNO_PORT: "5001"
+    volumes:
+    - /volume1/docker/acme-sh:/acme.sh

@@ -1,0 +1,17 @@
+services:
+  iptvboss:
+    image: ghcr.io/groenator/iptvboss-docker:latest
+    environment:
+      PUID: "1028"
+      PGID: "100"
+      TZ: "US/Arizona"
+      CRON_SCHEDULE: "0 0 * * *"
+      CRONITOR_API_KEY: "1f16af4312ac4ab7a1bf7d78d2924eae"
+      CRONITOR_SCHEDULE_NAME: "[Cerebro] IPTV Boss"
+      XC_SERVER: "true" # Set to true to start the XC server on boot. By default the XCSERVER is set to false.
+    ports:
+      - 8001:8001 # Used by XC Server
+      - 5901:5901 # Used by the VNC Server to connect to the container using the VNC client.
+      - 6901:6901 # Used by the VNC Server to connect to the container using a web browser.
+    volumes:
+    - /volume1/docker/iptv-boss:/headless/IPTVBoss

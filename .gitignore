@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,python,pydev
-# Edit at https://www.toptal.com/developers/gitignore?templates=cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,python,pydev
+# Created by https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,pydev,python,ansible,vagrant,terraform,visualstudiocode,direnv
+# Edit at https://www.toptal.com/developers/gitignore?templates=cmake,linux,macos,pydev,python,ansible,vagrant,terraform,visualstudiocode,direnv
 
 ### Ansible ###
 *.retry
@@ -22,6 +22,10 @@ CMakeUserPresets.json
 
 # External projects
 *-prefix/
+
+### direnv ###
+.direnv
+.envrc
 
 ### Linux ###
 *~
@@ -311,7 +315,7 @@ terraform.rc
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,python,pydev
+# End of https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,pydev,python,ansible,vagrant,terraform,visualstudiocode,direnv
 
 #############
 ## CUSTOM

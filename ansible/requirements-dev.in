@@ -1,0 +1,13 @@
+# Development and extra dependencies for Ansible
+# This file will include and lock against the versions resolved for production.
+-c requirements.txt
+
+# Testing
+pytest
+pytest-cov
+
+# Linting
+flake8
+black
+mypy
+# ansible-lint  # Consider if you want this in the main venv or run it separately

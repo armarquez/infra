@@ -1,16 +1,17 @@
-#!/usr/bin/env -S just --justfile
-# ^ A shebang isn't required, but allows a justfile to be executed
-#   like a script, with `./justfile test`, for example.
-
-#alias t := test
-
-#alias c := check
-
 # Environment Variables
 bt := '0'
 export RUST_BACKTRACE := bt
 log := "warn"
 export JUST_LOG := log
+
+# --- Python Environment & Dependencies ---
+_python_req_in_prod   := "requirements.in"
+_python_req_txt_prod  := "requirements.txt"
+_python_req_in_dev    := "requirements-dev.in"
+_python_req_txt_dev   := "requirements-dev.txt"
+
+# --- Ansible Galaxy ---
+_ansible_galaxy_req_file := "requirements.yaml"
 
 # List recipes by default
 default:
@@ -41,26 +42,71 @@ check-incus-instance HOST:
   fi
   echo "✅  Instance '{{HOST}}' is running."
 
-# Create a venv if it doesn't exist
+# Create a venv if it doesn't exist and upgrade pip
 venv:
-  test -d .venv || python3 -m venv .venv
+  #!/usr/bin/env sh
+  if [ ! -d .venv ]; then
+    echo "🐍 Creating Python virtual environment using \`python --version\`..."
+    python -m venv .venv
+  else
+    echo "🐍 Python virtual environment .venv already exists."
+  fi
+  echo "🐍 Upgrading pip in .venv..."
   .venv/bin/pip install --upgrade pip
 
-# Activate the virtual environment (informational)
-activate:
-  echo "Run 'source .venv/bin/activate' to activate the venv"
+# Compile production Python dependencies using pip-compile
+compile-prod: venv
+  #!/usr/bin/env sh
+  if [ -f "{{_python_req_in_prod}}" ]; then
+    echo "📦 Compiling production dependencies from {{_python_req_in_prod}}..."
+    .venv/bin/pip-compile --resolver=backtracking "{{_python_req_in_prod}}" -o "{{_python_req_txt_prod}}"
+    echo "✅ Production requirements compiled to {{_python_req_txt_prod}}"
+  else
+    echo "⚠️ {{_python_req_in_prod}} not found. Skipping production compilation."
+  fi
 
-# Install prod dependencies
+# Compile development Python dependencies (includes prod)
+compile-dev: compile-prod
+  #!/usr/bin/env sh
+  if [ -f "{{_python_req_in_dev}}" ]; then
+    echo "📦 Compiling development dependencies from {{_python_req_in_dev}}..."
+    .venv/bin/pip-compile --resolver=backtracking "{{_python_req_in_dev}}" -o "{{_python_req_txt_dev}}"
+    echo "✅ Development requirements compiled to {{_python_req_txt_dev}}"
+  else
+    echo "ℹ️ {{_python_req_in_dev}} not found. Skipping development compilation."
+  fi
+
+# Install production Python dependencies from the locked file
 install-prod: venv
-  .venv/bin/python -c 'import requirements, subprocess; subprocess.run([".venv/bin/pip", "install", *requirements.prod], check=True)'
+  #!/usr/bin/env sh
+  if [ -f "{{_python_req_txt_prod}}" ]; then
+    echo "🐍 Installing production Python dependencies from {{_python_req_txt_prod}}..."
+    .venv/bin/pip install -r "{{_python_req_txt_prod}}"
+    echo "✅ Production Python dependencies installed."
+  else
+    echo "⚠️ {{_python_req_txt_prod}} not found. Run 'just compile-prod' or ensure the file exists."
+  fi
 
-# Install dev + extras
-install-dev: venv
-  .venv/bin/python -c 'import requirements, subprocess; subprocess.run([".venv/bin/pip", "install", *requirements.dev], check=True)'
+# Install development Python dependencies (includes prod)
+install-dev: install-prod # Ensure prod dependencies are installed first
+  #!/usr/bin/env sh
+  if [ -f "{{_python_req_txt_dev}}" ]; then
+    echo "🐍 Installing development Python dependencies from {{_python_req_txt_dev}}..."
+    .venv/bin/pip install -r "{{_python_req_txt_dev}}"
+    echo "✅ Development Python dependencies installed."
+  else
+    echo "ℹ️ {{_python_req_txt_dev}} not found. Only production dependencies installed (if {{_python_req_txt_prod}} exists)."
+  fi
 
-# Install just a specific extras group (e.g. test, lint)
-install-extras GROUP: venv
-  .venv/bin/python -c 'import requirements, subprocess, os; subprocess.run([".venv/bin/pip", "install", *requirements.extras[os.environ["GROUP"]]], check=True)'
+# Installs dev dependencies (which includes prod)
+install: compile-dev install-dev
+  @echo "🎉 All Python dependencies compiled and installed."
+
+# Clean the Python virtual environment
+clean-venv:
+  rm -rf .venv
+  rm -f {{_python_req_txt_prod}} {{_python_req_txt_dev}} # Also remove generated txt files
+  @echo "🗑️ .venv directory and generated requirements files removed."
 
 # Run Ansible playbook for Proxmox setup
 setup HOST *TAGS: check-op
