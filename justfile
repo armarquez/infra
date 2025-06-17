@@ -64,31 +64,6 @@ info-bootstrap:
   @echo "  2. Run 'direnv allow' in the project directory"
   @echo ""
 
-# Add use_python function to ~/.config/direnv/direnvrc
-add-use-python-function:
-  #!/usr/bin/env bash
-  mkdir -p "$HOME/.config/direnv"
-  DRC="$HOME/.config/direnv/direnvrc"
-  if grep -q 'use_python()' "$DRC" 2>/dev/null; then
-    echo "✅ 'use_python' already exists in $DRC"
-    exit 0
-  fi
-  {
-    echo ''
-    echo 'use_python() {'
-    echo '  local python_version=$$1'
-    echo '  local venv_path=".venv"'
-    echo ''
-    echo '  if [[ ! -d "$$venv_path" ]]; then'
-    echo '    python$$python_version -m venv "$$venv_path"'
-    echo '  fi'
-    echo ''
-    echo '  layout python "$$venv_path"'
-    echo '}'
-  } >> "$DRC"
-  echo "✅ 'use_python' function added to $DRC"
-
-
 # Routing
 ansible *ARGS:
   direnv exec ./ansible just --justfile ansible/justfile {{ARGS}}
