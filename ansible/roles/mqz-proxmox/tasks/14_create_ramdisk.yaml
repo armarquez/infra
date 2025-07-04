@@ -1,0 +1,64 @@
+---
+- name: Manage RAM disk
+  when: create_ramfs is defined
+  block:
+    - name: Check if ramdisk is in fstab
+      ansible.builtin.command:
+        cmd: grep -q "^tmpfs /mnt/ramdisk tmpfs" /etc/fstab
+      register: var_ram_in_fstab
+      ignore_errors: true
+      changed_when: false
+
+    - name: Ensure /mnt/ramdisk directory exists
+      when:
+        - create_ramfs | bool
+        - var_ram_in_fstab.rc != 0
+      ansible.builtin.file:
+        path: /mnt/ramdisk
+        state: directory
+        mode: '0755'
+
+    - name: Add and mount ramdisk
+      ansible.posix.mount:
+        path: /mnt/ramdisk
+        src: tmpfs
+        fstype: tmpfs
+        opts: "size={{ ramfs_size }}"
+        state: mounted
+      when: create_ramfs | bool
+      changed_when: >
+        mount_result.fstype != 'tmpfs' or
+        mount_result.opts != 'size=' + ramfs_size
+      register: mount_result
+
+    - name: Unmount and remove ramdisk
+      when: not create_ramfs | bool
+      block:
+        - name: Unmount ramdisk
+          ansible.posix.mount:
+            path: /mnt/ramdisk
+            state: absent
+
+        - name: Remove /mnt/ramdisk directory
+          ansible.builtin.file:
+            path: /mnt/ramdisk
+            state: absent
+
+- name: Manage RAM disk storage in Proxmox
+  block:
+    - name: Check if ramdisk storage exists in Proxmox
+      ansible.builtin.command: pvesm status
+      register: pvesm_status
+      changed_when: false
+      failed_when: false
+
+    - name: Add ramdisk storage to Proxmox
+      ansible.builtin.command: pvesm add dir ramdisk --path /mnt/ramdisk --content images
+      when: create_ramfs | bool and not ('ramdisk' in pvesm_status.stdout)
+      changed_when: "'already exists' not in pvesm_status.stdout"
+
+    - name: Remove ramdisk storage from Proxmox
+      ansible.builtin.command: pvesm remove ramdisk
+      when: not create_ramfs | bool and 'ramdisk' in pvesm_status.stdout
+      failed_when: false
+      changed_when: "'ramdisk' in pvesm_status.stdout"

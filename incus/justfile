@@ -16,6 +16,15 @@ pre-reqs:
 
 # TODO: install Incus agent in Proxmox image
 
+# Ensure Incus instance is running
+check-incus-instance HOST:
+  #!/usr/bin/env sh
+  if ! incus list --format csv | grep -i -q "^{{HOST}},running"; then
+    echo "⚠️  Instance '{{HOST}}' is not running. Starting it now..."
+    incus start {{HOST}}
+    sleep 5  # Give some time for it to start
+  fi
+  echo "✅  Instance '{{HOST}}' is running."
 
 # Attach to instance
 attach HOST:
@@ -31,4 +40,5 @@ snapshot-initial HOST:
 
 # Restore instance to snaphot
 restore HOST NAME=initial_snapshot_name:
+  just check-incus-instance {{HOST}}
   incus snapshot restore {{HOST}} {{NAME}}

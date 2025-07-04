@@ -1,3 +1,4 @@
+---
 - name: Remove unnecessary repository files
   ansible.builtin.file:
     path: "{{ item }}"

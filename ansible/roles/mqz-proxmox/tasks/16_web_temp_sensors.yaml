@@ -1,0 +1,26 @@
+- name: Web temperatures install
+  when: web_show_temperatures | bool
+  notify:
+    - Restart pveproxy service
+  block:
+    - name: Run sensors-detect in auto mode to detect sensors
+      ansible.builtin.command:
+        cmd: sensors-detect --auto
+      register: sensors_detect_result
+      ignore_errors: true
+      changed_when: >
+        ("No modules to load, skipping modules configuration." not in sensors_detect_result.stdout) and
+        ("Sorry, no sensors were detected." not in sensors_detect_result.stdout) and
+        ("Your system has no sensors" not in sensors_detect_result.stdout)
+
+    - name: Copy Python script to remote host
+      ansible.builtin.copy:
+        src: insert_thermal.py
+        dest: /tmp/insert_thermal.py
+        mode: '0755'
+
+    - name: Run the Python script to modify the JS file
+      ansible.builtin.command:
+        cmd: python3 /tmp/insert_thermal.py
+      register: result
+      changed_when: "'Line already exists, skipping insertion.' not in result.stdout"

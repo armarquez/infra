@@ -1,3 +1,4 @@
+---
 - name: Change root password
   ansible.builtin.user:
     name: root

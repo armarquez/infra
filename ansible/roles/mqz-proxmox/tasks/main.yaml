@@ -1,22 +1,59 @@
 ---
 # tasks/main.yaml
 - name: Init
-  include_tasks: 00_init.yaml
+  ansible.builtin.include_tasks: 00_init.yaml
 
 - name: Backup etc
-  include_tasks: 01_backup_etc.yaml
+  ansible.builtin.include_tasks: 01_backup_etc.yaml
 
 - name: Date timezone
-  include_tasks: 02_date_timezone.yaml
+  ansible.builtin.include_tasks: 02_date_timezone.yaml
 
 - name: Prepare repos
-  include_tasks: 03_prepare_repos.yaml
+  ansible.builtin.include_tasks: 03_prepare_repos.yaml
 
 - name: Install software
-  include_tasks: 04_install_software.yaml
+  ansible.builtin.include_tasks: 04_install_software.yaml
 
 - name: Run tasks for init sshd user
-  include_tasks: 05_init_sshd.yaml
+  ansible.builtin.include_tasks: 05_init_sshd.yaml
 
 - name: Configure-users
-  include_tasks: 06_configure_users.yaml
+  ansible.builtin.include_tasks: 06_configure_users.yaml
+
+- name: Configure bash
+  ansible.builtin.include_tasks: 07_configure_bash.yaml
+
+- name: Prepare system
+  ansible.builtin.include_tasks: 08_prepare_system.yaml
+
+- name: Configure network
+  ansible.builtin.include_tasks: 09_configure_network.yaml
+
+- name: Configure ZFS
+  ansible.builtin.include_tasks: 10_configure_zfs.yaml
+
+- name: Configure Proxmox
+  ansible.builtin.include_tasks: 11_configure_proxmox.yaml
+
+- name: PCIE Passthrough
+  ansible.builtin.include_tasks: 12_pcie_passthrough.yaml
+
+- name: Configure Kernel Samepage Merging (KSM)
+  ansible.builtin.include_tasks: 13_ksmtuned.yaml
+
+- name: Create RAM Disk
+  ansible.builtin.include_tasks: 14_create_ramdisk.yaml
+
+- name: CPU Performance
+  ansible.builtin.include_tasks: 15_cpu_performance.yaml
+
+- name: Web Temp Sensor
+  ansible.builtin.include_tasks: 16_web_temp_sensors.yaml
+
+- name: Pin Kernel
+  ansible.builtin.include_tasks: 17_pin_kernel.yaml
+
+- name: Fail2ban
+  ansible.builtin.include_tasks: 18_fail2ban.yaml
+  tags: ["proxmox_test"]

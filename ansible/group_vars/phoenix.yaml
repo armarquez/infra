@@ -65,6 +65,120 @@ uninstall_packages: "" # Specify packages to uninstall.
 change_default_ssh_port: false # Enable changing the default SSH port.
 new_ssh_port: 22 # Specify the new SSH port.
 
+## Add, change system locales
+add_locales: false # Enable adding or modifying system locales.
+default_locale: "en_US.UTF-8" # Default system locale.
+additional_locales:
+  - "en_US.UTF-8 UTF-8" # Additional locales to generate.
+
+## Bash Configruation
+configure_bash: true # Enable custom Bash configurations.
+bash_history_size: 3000 # Set the maximum Bash history size.
+# Custom Bash prompt configuration.
+custom_bash_prompt: >- 
+  \[\033[01;33m\]\u@\h\[\033[00m\]:\[\033[01;32m\]\w\[\033[00m\] \[\033[01;34m\][\#]\[\033[01;31m\]\$\[\033[00m\] 
+
+## Enable/Disable Hyper-Threading
+change_smt: false # Enable or disable Hyper-Threading.
+smt: off # Specify "on" or "off" for Hyper-Threading.
+
+## Custom services to disable
+services_to_disable:
+  - name: lxc # LXC service.
+    disable: false
+  - name: spiceproxy # SPICE Proxy service.
+    disable: false
+  - name: pve-ha-crm # Proxmox HA Cluster Manager service.
+    disable: false
+  - name: pve-ha-lrm # Proxmox HA Local Resource Manager service.
+    disable: false
+  - name: lxc-monitord # LXC Monitoring Daemon.
+    disable: false
+  - name: lxc-net # LXC Network service.
+    disable: false
+  - name: lxcfs # LXC File System.
+    disable: false
+  - name: pve-lxc-syscalld # PVE LXC syscall daemon. Do not disable this.
+    disable: false
+  - name: corosync # Corosync Cluster Engine.
+    disable: false
+  - name: iscsid
+    disable: false
+
+## Set hostname
+set_hostname: phoenix # Hostname for the Proxmox server.
+set_hostname_fqdn: phoenix.mqz.casa # Fully Qualified Domain Name (FQDN).
+
+## Network configuration
+disable_ipv6: true # Disable IPv6 on the system.
+configure_network: false # Enable custom network configuration.
+network_config: |
+  auto lo
+  iface lo inet loopback
+
+  iface ens18 inet manual
+
+  auto vmbr0
+  iface vmbr0 inet static
+          address 192.168.1.83/24
+          gateway 192.168.1.1
+          bridge-ports ens18
+          bridge-stp off
+          bridge-fd 0
+
+## DNS servers          
+dns_servers:
+  - 1.1.1.1 # Primary DNS server.
+  - 8.8.8.8 # Secondary DNS server.
+
+## Set ZFS ARC config in GB
+set_zfs_arc: false
+zfs_arc_min: 1 # Minimum ARC size in GB.
+zfs_arc_max: 1 # Maximum ARC size in GB.
+
+## Max workers, bulk actions in Proxmox
+max_workers: 10 # Set the maximum number of workers for bulk operations in Proxmox.
+
+## PCIe passthrough configuration
+pcie_passthrough:
+  blocklist:
+    - radeon # Blacklist Radeon driver.
+    - nouveau # Blacklist Nouveau driver.
+    - nvidia* # Blacklist NVIDIA driver.
+    - i915 # Blacklist Intel integrated graphics driver.
+    - amdgpu # Blacklist AMD GPU driver.
+    - xe # Blacklist Xe graphics driver.
+  ids: # Device IDs for VFIO passthrough.
+    - 10de:1db6
+    - 10de:10f1
+  ids_gpu: # GPU device IDs for VFIO passthrough.
+    - 1002:67df
+    - 1002:aaf0
+
+disable_ksmtuned: false # Disable Kernel Samepage Merging tuning.
+
+## Kernel Samepage Merging (KSM) configuration
+KSM_THRES_COEF: 0 # Percentage of free memory to trigger KSM (default: 20).
+KSM_THRES_CONST: 0 # Free memory threshold in MB to trigger KSM (default: 2048).
+KSM_MONITOR_INTERVAL: 0 # Time interval (seconds) between scans (default: 60).
+KSM_SLEEP_MSEC: 0 # Pause duration (milliseconds) between scans of 16GB blocks (default: 100).
+KSM_NPAGES_MIN: 0 # Minimum number of pages to scan (default: 64).
+KSM_NPAGES_MAX: 0 # Maximum number of pages to scan (default: 1250).
+KSM_NPAGES_BOOST: 0 # Pages to boost when free memory is below threshold (default: 300).
+KSM_NPAGES_DECAY: 0 # Pages to reduce when free memory exceeds threshold (default: -50).
+
+## Enable or disable RAM disk storage
+create_ramfs: false # Enable or disable creating a RAM disk.
+ramfs_size: 1000m # RAM disk size (e.g., 200000m for 200GB).
+
+## CPU performance configuration
+pstate_performance: true # Enable P-State performance tuning.
+amd_pstate: active # AMD P-State mode (e.g., active, guided).
+intel_pstate: active # Intel P-State mode (e.g., active, passive).
+scaling_governor: performance # CPU scaling governor (e.g., schedutil, performance, powersave). Please check available modes before use.
+
+
+
 # mqz-github-keys
 github_key_users:
   - user: "{{ main_username }}"

@@ -1,3 +1,4 @@
+---
 - name: Compress /etc directory on remote system
   community.general.archive:
     path: /etc

@@ -1,0 +1,16 @@
+[Definition]
+allowipv6 = false
+
+[proxmox]
+enabled = true
+port = https,http,8006
+filter = proxmox
+backend = systemd
+maxretry = 3
+findtime = 2d
+bantime = 1h
+
+[sshd]
+port    = ssh
+logpath = %(sshd_log)s
+backend = systemd

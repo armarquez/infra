@@ -1,0 +1,54 @@
+---
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ set_hostname }}"
+  register: hostname_changed
+
+- name: Configure /etc/hosts
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_default_ipv4.address is defined
+  register: hosts_changed
+
+- name: Ensure /etc/network/interfaces backup exists
+  ansible.builtin.copy:
+    src: /etc/network/interfaces
+    dest: /etc/network/interfaces.bak
+    mode: '0644'
+    remote_src: true
+  when: configure_network | default(false)
+
+- name: Configure /etc/network/interfaces
+  ansible.builtin.copy:
+    dest: /etc/network/interfaces
+    content: "{{ network_config }}"
+    mode: '0644'
+  when: configure_network | default(false)
+  register: interfaces_changed
+
+- name: Configure DNS servers
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      {% for dns in dns_servers %}
+      nameserver {{ dns }}
+      {% endfor %}
+    mode: '0644'
+  when: dns_servers is defined and dns_servers | length > 0
+
+- name: Restart hostname-related services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - pveproxy
+    - pve-cluster
+    - networking
+  when: >
+    hostname_changed.changed or
+    hosts_changed.changed or
+    interfaces_changed.changed

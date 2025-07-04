@@ -1,3 +1,4 @@
+---
 - name: Set ansible_user and ansible_ssh_pass dynamically
   ansible.builtin.set_fact:
     ansible_user: "{{ initial_user }}"

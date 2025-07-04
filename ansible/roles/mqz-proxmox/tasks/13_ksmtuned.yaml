@@ -1,0 +1,33 @@
+---
+- name: Stop ksmtuned service if disable_ksmtuned is true
+  ansible.builtin.systemd:
+    name: ksmtuned
+    state: stopped
+  when: disable_ksmtuned | default(false)
+
+- name: Disable ksmtuned service if disable_ksmtuned is true
+  ansible.builtin.systemd:
+    name: ksmtuned
+    enabled: false
+  when: disable_ksmtuned | default(false)
+
+- name: Start ksmtuned service if disable_ksmtuned is false
+  ansible.builtin.systemd:
+    name: ksmtuned
+    state: started
+  when: not disable_ksmtuned | default(false)
+
+- name: Enable ksmtuned service if disable_ksmtuned is false
+  ansible.builtin.systemd:
+    name: ksmtuned
+    enabled: false
+  when: not disable_ksmtuned | default(false)
+
+- name: Ensure /etc/ksmtuned.conf is created from template
+  ansible.builtin.template:
+    src: ksmtuned.conf.j2
+    dest: /etc/ksmtuned.conf
+    mode: '0644'
+    owner: root
+    group: root
+  notify: Restart ksmtuned

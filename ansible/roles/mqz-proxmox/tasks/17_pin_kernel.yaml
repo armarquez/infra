@@ -1,0 +1,48 @@
+---
+- name: Kernel management tasks
+  notify:
+    - "{{ 'Update GRUB' if global_boot_mode.strip() != 'efi' else 'Proxmox Boot Tool Refresh' }}"
+  block:
+    - name: Install specified Proxmox kernel if enabled and version is provided
+      ansible.builtin.apt:
+        name: "proxmox-kernel-{{ specific_kernel_version }}"
+        state: present
+        update_cache: true
+      when: install_specific_kernel | default(false) | bool and specific_kernel_version is defined
+
+    - name: Pin specified Proxmox kernel
+      ansible.builtin.shell: |
+        set -o pipefail
+        proxmox-boot-tool kernel add {{ pin_kernel_version }} ; \
+        echo "Y" | proxmox-boot-tool kernel pin {{ pin_kernel_version }}
+      when: pin_kernel_enabled | default(false) | bool and pin_kernel_version is defined
+      changed_when: "'Set' in pin_result.stdout"
+      register: pin_result
+
+    - name: Unpin specified Proxmox kernel
+      ansible.builtin.shell: |
+        set -o pipefail
+        proxmox-boot-tool kernel remove {{ unpin_kernel_version }} ; \
+        echo "Y" | proxmox-boot-tool kernel unpin
+      when: unpin_kernel_enabled | default(false) | bool
+      changed_when: "'unpinned' in unpin_result.stdout"
+      register: unpin_result
+
+- name: Manage old kernels
+  when: clean_old_kernels | bool
+  block:
+    - name: Get list of installed proxmox kernels and current kernel
+      ansible.builtin.shell: |
+        set -o pipefail
+        current_kernel=$(uname -r)
+        dpkg --list | grep 'kernel-.*-pve' | awk '{print $2}' | grep -v "$current_kernel" | sort -V | head -n -{{ kernels_to_keep | default(0) }} || true
+      register: kernel_list
+      changed_when: false
+
+    - name: Remove old kernels
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: absent
+        purge: true
+      loop: "{{ kernel_list.stdout_lines }}"
+      when: kernel_list.stdout_lines | length > 0
