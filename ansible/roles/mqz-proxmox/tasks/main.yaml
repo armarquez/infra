@@ -56,4 +56,15 @@
 
 - name: Fail2ban
   ansible.builtin.include_tasks: 18_fail2ban.yaml
-  tags: ["proxmox_test"]
+
+- name: Nested virtualization
+  ansible.builtin.include_tasks: 19_nested_virtualization.yaml
+
+- name: Nginx
+  ansible.builtin.include_tasks: 20_nginx.yaml
+
+- name: Logs tmpfs
+  ansible.builtin.include_tasks: 21_logs_tmpfs.yaml
+
+- name: Update and Reboot
+  ansible.builtin.include_tasks: 99_update_reboot.yaml

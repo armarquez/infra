@@ -1,0 +1,48 @@
+- name: Manage nested virtualization
+  block:
+    - name: Set up parameters for module name
+      ansible.builtin.set_fact:
+        module_name: >-
+          {% if 'GenuineIntel' in global_cpu_vendor %}
+          kvm_intel
+          {% elif 'AuthenticAMD' in global_cpu_vendor %}
+          kvm_amd
+          {% else %}
+          none
+          {% endif %}
+      when: "'GenuineIntel' in global_cpu_vendor or 'AuthenticAMD' in global_cpu_vendor"
+
+    - name: Set up parameters for virtualization paths
+      ansible.builtin.set_fact:
+        conf_path: "/etc/modprobe.d/{{ module_name | trim }}.conf"
+        nested_option: "{{ 'nested=1' if nested_virtualization_enable else '' }}"
+      when: module_name != 'none'
+
+    - name: Create modprobe configuration file for nested virtualization
+      ansible.builtin.copy:
+        dest: "{{ conf_path }}"
+        content: "options {{ module_name }} {{ nested_option }}\n"
+        owner: root
+        group: root
+        mode: '0644'
+      when: nested_virtualization_enable
+
+    - name: Remove modprobe configuration file if nested virtualization is disabled
+      ansible.builtin.file:
+        path: "{{ conf_path }}"
+        state: absent
+      when: not nested_virtualization_enable
+
+    - name: Check if module is loaded
+      ansible.builtin.shell: |
+        set -o pipefail
+        awk '$1 == "{{ module_name }}" { print $1 }' /proc/modules
+      register: module_loaded
+      failed_when: false
+      changed_when: false
+
+    - name: Enable nested virtualization now
+      ansible.builtin.shell: |
+        modprobe {{ module_name }}
+      when: module_loaded.rc != 0
+      changed_when: module_loaded.rc != 0

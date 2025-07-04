@@ -60,3 +60,10 @@
     name: fail2ban
     state: restarted
     enabled: true
+
+- name: Restart Nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: true
+  when: nginx_enable
