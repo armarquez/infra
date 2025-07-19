@@ -1,7 +1,7 @@
 ---
 - hosts: phoenix
   vars_files:
-    - 'vars/vault.yaml'
+    - 'group_vars/secrets.yaml'
   vars:
     setup: "{{ lookup('env', 'SETUP') | default('false') }}"
   become: true
@@ -21,7 +21,7 @@
 
 # - hosts: dazzler
 #   vars_files:
-#     - 'vars/vault.yaml'
+#     - 'group_vars/secrets.yaml'
 #   become: yes
 #   roles:
 #     - role: geerlingguy.docker
@@ -29,7 +29,7 @@
 
 # - hosts: cerebro
 #   vars_files:
-#     - 'vars/vault.yaml'
+#     - 'group_vars/secrets.yaml'
 #   roles:
 #     - role: ironicbadger.docker_compose_generator
 #       tags: compose

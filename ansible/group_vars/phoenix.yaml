@@ -22,10 +22,8 @@ update_system_now: false # Update the system immediately after completing all pl
 ## Users configuration
 initial_user: root # Initial user for the system.
 change_root_password: false # Enable changing the root password.
-new_root_password: P@ssw0rd* # New root password.
 system_user: localuser # Name of the non-root system user.
 enable_system_user_password: true # Enable password authentication for the system user.
-system_user_password: P@ssw0rd* # Password for the system user.
 disable_root_login: false # Disable root login via SSH.
 disable_password_auth: false # Disable password-based SSH authentication.
 pub_keys_folder: pub_keys/ # Folder containing public SSH keys.
@@ -120,7 +118,7 @@ network_config: |
 
   auto vmbr0
   iface vmbr0 inet static
-          address 192.168.1.83/24
+          address 192.168.1.240/24
           gateway 192.168.1.1
           bridge-ports ens18
           bridge-stp off

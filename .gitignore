@@ -322,7 +322,7 @@ terraform.rc
 #############
 galaxy_roles
 .vault-password
-vault.yaml
+secrets.yaml
 collections/
 galaxy_cache/
 galaxy_token

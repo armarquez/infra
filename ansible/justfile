@@ -122,7 +122,7 @@ reqs *FORCE: install-prod
 
 # Perform an action (encrypt/decrypt/edit) on Ansible vault
 vault ACTION: check-op
-  EDITOR='code --wait' ansible-vault {{ACTION}} vars/vault.yaml
+  EDITOR='code --wait' ansible-vault {{ACTION}} group_vars/secrets.yaml
 
 # Test Ansible playbook for HOST on incus
 test HOST *TAGS: check-op
