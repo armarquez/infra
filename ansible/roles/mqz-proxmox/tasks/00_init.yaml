@@ -36,10 +36,11 @@
     fi
   register: boot_mode
   changed_when: false
+  when: global_boot_mode is not defined
 
-- name: Set global fact for boot loader
+- name: Set global fact for boot loader (from detection or pre-set variable)
   ansible.builtin.set_fact:
-    global_boot_mode: "{{ boot_mode.stdout.strip() }}"
+    global_boot_mode: "{{ (boot_mode.stdout | default(global_boot_mode)) | trim }}"
 
 - name: Get Proxmox version
   ansible.builtin.command: pveversion

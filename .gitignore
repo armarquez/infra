@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,pydev,python,ansible,vagrant,terraform,visualstudiocode,direnv
-# Edit at https://www.toptal.com/developers/gitignore?templates=cmake,linux,macos,pydev,python,ansible,vagrant,terraform,visualstudiocode,direnv
+# Created by https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,direnv,compressed,python
+# Edit at https://www.toptal.com/developers/gitignore?templates=cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,direnv,compressed,python
 
 ### Ansible ###
 *.retry
@@ -22,6 +22,20 @@ CMakeUserPresets.json
 
 # External projects
 *-prefix/
+
+### Compressed ###
+*.7z
+*.deb
+*.gz
+*.pkg
+*.rar
+*.rpm
+*.sit
+*.sitx
+*.tar
+*.zip
+*.zipx
+*.tgz
 
 ### direnv ###
 .direnv
@@ -74,9 +88,6 @@ Temporary Items
 ### macOS Patch ###
 # iCloud generated files
 *.icloud
-
-### pydev ###
-.pydevproject
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -315,7 +326,7 @@ terraform.rc
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,pydev,python,ansible,vagrant,terraform,visualstudiocode,direnv
+# End of https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,direnv,compressed,python
 
 #############
 ## CUSTOM

@@ -35,6 +35,7 @@ system_update_scheduler: false  # Enable automatic system updates.
 update_schedule_time: "6:00"  # Time to install updates (format: HH:MM).
 
 ## Kernel Management
+global_boot_mode: "efi-grub"
 install_specific_kernel: false # Enable installation of a specific kernel version.
 specific_kernel_version: "6.11.0-2-pve-signed" # The specific kernel version to install.
 pin_kernel_enabled: false # Enable pinning a specific kernel version.

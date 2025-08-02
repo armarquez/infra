@@ -4,7 +4,7 @@
     - 'group_vars/secrets.yaml'
   vars:
     setup: "{{ lookup('env', 'SETUP') | default('false') }}"
-  become: true
+  gather_facts: false
   roles:
     # - role: geerlingguy.ntp
     # - role: singleplatform-eng.users
