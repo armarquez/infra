@@ -1,0 +1,61 @@
+# Set a variable with the QEMU accelerator flag if running inside WSL
+wsl_flag := `if grep -q -i wsl /proc/version; then echo "-var 'qemu_accelerator=none'"; fi`
+
+# Default command
+default:
+  just --list
+
+# Build the Proxmox image
+build *ARGS:
+  @just _ensure-deps
+  @./scripts/validate.sh
+  @echo "\nRunning Packer build..."
+  PACKER_LOG=1 packer build {{ARGS}} .
+
+# Initializes and validates the Packer configuration
+validate:
+  @just _ensure-deps
+  @./scripts/validate.sh
+
+# Convert built image to Incus format and import
+import-to-incus:
+  @./scripts/convert-to-incus.sh
+
+# Build and import to Incus in one step
+build-and-import *ARGS:
+  @just _ensure-deps
+  @./scripts/validate.sh
+  @echo "\nRunning Packer build..."
+  packer build {{ARGS}} {{wsl_flag}} .
+  @echo "\nConverting to Incus format..."
+  @./scripts/convert-to-incus.sh
+
+# Clean up build artifacts
+clean:
+  @echo "Cleaning up build artifacts..."
+  rm -rf output/
+  rm -rf packer_cache/
+  @echo "✅ Cleanup complete"
+
+# Internal recipe to ensure dependencies are met
+_ensure-deps:
+  @./scripts/check-deps.sh --quiet || (echo "🔧 Dependencies missing. Installing automatically..." && ./scripts/install-deps.sh)
+
+# Check dependencies status
+check-deps:
+  @./scripts/check-deps.sh
+
+# Force install/update all dependencies
+install-deps:
+  @./scripts/install-deps.sh
+
+# Show build status
+status:
+  @echo "=== Dependency Status ==="
+  @./scripts/check-deps.sh || echo "❌ Some dependencies missing - run 'just install-deps'"
+  @echo ""
+  @echo "=== Build Status ==="
+  @if [ -d "output" ]; then echo "✅ Output directory exists"; ls -la output/; else echo "❌ No output directory found"; fi
+  @echo ""
+  @echo "=== Incus Images ==="
+  @incus image list | grep -E "(ALIAS|proxmox)" || echo "No ProxMox images found in Incus"
