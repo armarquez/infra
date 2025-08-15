@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,direnv,compressed,python
-# Edit at https://www.toptal.com/developers/gitignore?templates=cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,direnv,compressed,python
+# Created by https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,direnv,python,ansible,vagrant,terraform,compressed,visualstudiocode,packer
+# Edit at https://www.toptal.com/developers/gitignore?templates=cmake,linux,macos,direnv,python,ansible,vagrant,terraform,compressed,visualstudiocode,packer
 
 ### Ansible ###
 *.retry
@@ -88,6 +88,28 @@ Temporary Items
 ### macOS Patch ###
 # iCloud generated files
 *.icloud
+
+### Packer ###
+# Cache objects
+packer_cache/
+
+# Crash log
+crash.log
+
+# https://www.packer.io/guides/hcl/variables
+# Exclude all .pkrvars.hcl files, which are likely to contain sensitive data,
+# such as password, private keys, and other secrets. These should not be part of
+# version control as they are data points which are potentially sensitive and
+# subject to change depending on the environment.
+#
+*.pkrvars.hcl
+
+# For built boxes
+*.box
+
+### Packer Patch ###
+# ignore temporary output files
+output-*/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -270,7 +292,6 @@ pyrightconfig.json
 *.tfstate.*
 
 # Crash log files
-crash.log
 crash.*.log
 
 # Exclude all .tfvars files, which are likely to contain sensitive data, such as
@@ -305,7 +326,6 @@ terraform.rc
 # *.log
 
 ### Vagrant Patch ###
-*.box
 
 ### VisualStudioCode ###
 .vscode/*
@@ -326,7 +346,7 @@ terraform.rc
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,ansible,vagrant,terraform,visualstudiocode,direnv,compressed,python
+# End of https://www.toptal.com/developers/gitignore/api/cmake,linux,macos,direnv,python,ansible,vagrant,terraform,compressed,visualstudiocode,packer
 
 #############
 ## CUSTOM
@@ -337,3 +357,4 @@ secrets.yaml
 collections/
 galaxy_cache/
 galaxy_token
+*.qcow2

@@ -1,5 +1,3 @@
-# Set a variable with the QEMU accelerator flag if running inside WSL
-wsl_flag := `if grep -q -i wsl /proc/version; then echo "-var 'qemu_accelerator=none'"; fi`
 
 # Default command
 default:
@@ -9,8 +7,8 @@ default:
 build *ARGS:
   @just _ensure-deps
   @./scripts/validate.sh
-  @echo "\nRunning Packer build..."
-  PACKER_LOG=1 packer build {{ARGS}} .
+  @echo "Running Packer build..."
+  @./scripts/build-with-kvm.sh {{ARGS}}
 
 # Initializes and validates the Packer configuration
 validate:
@@ -25,9 +23,9 @@ import-to-incus:
 build-and-import *ARGS:
   @just _ensure-deps
   @./scripts/validate.sh
-  @echo "\nRunning Packer build..."
-  packer build {{ARGS}} {{wsl_flag}} .
-  @echo "\nConverting to Incus format..."
+  @echo "Running Packer build..."
+  @./scripts/build-with-kvm.sh {{ARGS}}
+  @echo "Converting to Incus format..."
   @./scripts/convert-to-incus.sh
 
 # Clean up build artifacts
@@ -49,13 +47,93 @@ check-deps:
 install-deps:
   @./scripts/install-deps.sh
 
+# Check KVM availability and provide setup instructions
+check-kvm:
+  @./scripts/check-kvm.sh
+
+# Prepare Proxmox ISO with embedded answer file
+prepare-iso:
+  @./scripts/prepare-iso.sh
+
+# Build with debug logging (PACKER_LOG=1)
+build-debug *ARGS:
+  @just _ensure-deps
+  @./scripts/validate.sh
+  @echo "🐛 Running Packer build with debug logging..."
+  @PACKER_LOG=1 ./scripts/build-with-kvm.sh {{ARGS}}
+
+# Build with trace logging (most verbose)
+build-trace *ARGS:
+  @just _ensure-deps
+  @./scripts/validate.sh
+  @echo "🔍 Running Packer build with trace logging..."
+  @PACKER_LOG=TRACE ./scripts/build-with-kvm.sh {{ARGS}}
+
+# Build with custom log level (DEBUG, INFO, WARN, ERROR, TRACE)
+build-log LEVEL *ARGS:
+  @just _ensure-deps
+  @./scripts/validate.sh
+  @echo "📝 Running Packer build with {{LEVEL}} logging..."
+  @PACKER_LOG={{LEVEL}} ./scripts/build-with-kvm.sh {{ARGS}}
+
+# Build and import with debug logging
+build-and-import-debug *ARGS:
+  @just _ensure-deps
+  @./scripts/validate.sh
+  @echo "🐛 Running Packer build with debug logging..."
+  @PACKER_LOG=1 ./scripts/build-with-kvm.sh {{ARGS}}
+  @echo "Converting to Incus format..."
+  @./scripts/convert-to-incus.sh
+
+# Build with verbose Ansible output for troubleshooting
+build-ansible-debug *ARGS:
+  @just _ensure-deps
+  @./scripts/validate.sh
+  @echo "🐛 Running Packer build with verbose Ansible output..."
+  @ANSIBLE_STDOUT_CALLBACK=debug PACKER_LOG=1 ./scripts/build-with-kvm.sh {{ARGS}}
+
+# === ITERATIVE DEVELOPMENT RECIPES ===
+
+# Build base Proxmox image (slow, run once)
+build-base *ARGS:
+  @just _ensure-deps
+  @echo "🏗️  Building base Proxmox image (this takes ~10 minutes)..."
+  @./scripts/build-base.sh {{ARGS}}
+
+# Fast provisioning iteration using existing base image
+provision-only *ARGS:
+  @just _ensure-deps
+  @echo "⚡ Fast provisioning iteration using base image..."
+  @./scripts/build-provision.sh {{ARGS}}
+
+# Debug provisioning with verbose output
+provision-debug *ARGS:
+  @just _ensure-deps
+  @echo "🐛 Debug provisioning with verbose output..."
+  @ANSIBLE_STDOUT_CALLBACK=debug PACKER_LOG=1 ./scripts/build-provision.sh {{ARGS}}
+
+# Clean up base image artifacts
+clean-base:
+  @echo "🗑️  Cleaning base image artifacts..."
+  rm -rf output-base/
+  @echo "✅ Base artifacts cleaned"
+
+# Full workflow: build base, then provision
+build-full *ARGS:
+  @echo "🚀 Running full build workflow..."
+  @just build-base {{ARGS}}
+  @just provision-only {{ARGS}}
+
 # Show build status
 status:
   @echo "=== Dependency Status ==="
   @./scripts/check-deps.sh || echo "❌ Some dependencies missing - run 'just install-deps'"
   @echo ""
-  @echo "=== Build Status ==="
-  @if [ -d "output" ]; then echo "✅ Output directory exists"; ls -la output/; else echo "❌ No output directory found"; fi
+  @echo "=== Base Image Status ==="
+  @if [ -d "output-base" ]; then echo "✅ Base image directory exists"; ls -la output-base/; else echo "❌ No base image found - run 'just build-base'"; fi
+  @echo ""
+  @echo "=== Final Image Status ==="
+  @if [ -d "output" ]; then echo "✅ Final image directory exists"; ls -la output/; else echo "❌ No final image found"; fi
   @echo ""
   @echo "=== Incus Images ==="
   @incus image list | grep -E "(ALIAS|proxmox)" || echo "No ProxMox images found in Incus"

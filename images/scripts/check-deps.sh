@@ -70,6 +70,17 @@ for cmd in "${!OPTIONAL_DEPS[@]}"; do
     fi
 done
 
+# Check KVM availability and set accelerator
+if [[ "$QUIET_MODE" == false ]]; then
+    echo
+    ./scripts/check-kvm.sh
+else
+    ./scripts/check-kvm.sh --quiet
+fi
+
+# Source the accelerator setting
+eval "$(./scripts/check-kvm.sh --quiet)"
+
 # Export missing dependencies for use by install script
 export MISSING_REQUIRED="${missing_required[*]}"
 export MISSING_OPTIONAL="${missing_optional[*]}"

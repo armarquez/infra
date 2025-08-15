@@ -203,9 +203,49 @@ if [[ ${#missing_optional_packages[@]} -gt 0 ]]; then
     install_optional_packages "${missing_optional_packages[@]}"
 fi
 
+# Function to setup KVM group membership
+setup_kvm_group() {
+    local current_user="$USER"
+    
+    # Check if kvm group exists
+    if ! getent group kvm > /dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  KVM group doesn't exist. This is expected on some systems.${NC}"
+        return 0
+    fi
+    
+    # Check if user is already in kvm group
+    if groups "$current_user" | grep -q "\bkvm\b"; then
+        echo -e "${GREEN}✅ User '$current_user' is already in kvm group${NC}"
+        return 0
+    fi
+    
+    echo -e "${YELLOW}🔑 Adding user '$current_user' to kvm group...${NC}"
+    echo -e "${BLUE}This requires sudo permissions.${NC}"
+    
+    if sudo usermod -a -G kvm "$current_user"; then
+        echo -e "${GREEN}✅ Successfully added user to kvm group${NC}"
+        echo -e "${YELLOW}⚠️  You'll need to log out and log back in (or run 'newgrp kvm') for the changes to take effect.${NC}"
+        return 0
+    else
+        echo -e "${RED}❌ Failed to add user to kvm group${NC}"
+        return 1
+    fi
+}
+
+# Check and setup KVM if qemu-kvm was installed
+if [[ " ${missing_required_packages[*]} " =~ " qemu-kvm " ]] && [[ ${#missing_required_packages[@]} -gt 0 ]]; then
+    echo -e "${BLUE}🔍 Setting up KVM access...${NC}"
+    setup_kvm_group
+fi
+
 echo -e "${BLUE}🔍 Running final dependency check...${NC}"
 if ./scripts/check-deps.sh; then
     echo -e "${GREEN}🎉 All dependencies are now properly installed!${NC}"
+    
+    # Run KVM check to show current status
+    echo
+    echo -e "${BLUE}🔍 Checking KVM acceleration status...${NC}"
+    ./scripts/check-kvm.sh
 else
     echo -e "${RED}❌ Some dependencies are still missing. Please check the output above.${NC}"
     exit 1
