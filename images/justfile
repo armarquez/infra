@@ -1,7 +1,6 @@
-
-# Default command
+# Default command - show help
 default:
-  just --list
+  @just help
 
 # Build the Proxmox image
 build *ARGS:
@@ -15,9 +14,27 @@ validate:
   @just _ensure-deps
   @./scripts/validate.sh
 
+# === IMAGE IMPORT RECIPES ===
+
 # Convert built image to Incus format and import
 import-to-incus:
   @./scripts/convert-to-incus.sh
+
+# Import image to Incus with force (removes existing image)
+import-to-incus-force:
+  @echo "🔄 Force importing to Incus (will remove existing image)..."
+  @./scripts/convert-to-incus.sh
+
+# Check what images are available in Incus
+list-incus-images:
+  @echo "=== Incus Images ==="
+  @incus image list
+
+# Clean up Incus images (removes Proxmox images)
+clean-incus-images:
+  @echo "🗑️  Removing Proxmox images from Incus..."
+  @incus image list | grep proxmox | awk '{print $$2}' | xargs -r incus image delete || echo "No Proxmox images found"
+  @echo "✅ Incus cleanup complete"
 
 # Build and import to Incus in one step
 build-and-import *ARGS:
@@ -28,12 +45,32 @@ build-and-import *ARGS:
   @echo "Converting to Incus format..."
   @./scripts/convert-to-incus.sh
 
+# === CLEANUP RECIPES ===
+
 # Clean up build artifacts
 clean:
-  @echo "Cleaning up build artifacts..."
+  @echo "🗑️  Cleaning up build artifacts..."
   rm -rf output/
   rm -rf packer_cache/
   @echo "✅ Cleanup complete"
+
+# Clean everything (build artifacts + Incus images)
+clean-all:
+  @echo "🗑️  Cleaning everything..."
+  @just clean
+  @just clean-incus-images
+  @just clean-base
+  @echo "✅ Complete cleanup done"
+
+# Clean only temporary files (keep final images)
+clean-temp:
+  @echo "🗑️  Cleaning temporary files..."
+  rm -rf packer_cache/
+  rm -rf output/incus-unified-image/
+  rm -f output/*.tar
+  rm -f output/*.tar.gz
+  rm -f output/*.tar.xz
+  @echo "✅ Temporary files cleaned"
 
 # Internal recipe to ensure dependencies are met
 _ensure-deps:
@@ -124,16 +161,55 @@ build-full *ARGS:
   @just build-base {{ARGS}}
   @just provision-only {{ARGS}}
 
-# Show build status
+# === STATUS & INFO RECIPES ===
+
+# Show comprehensive build and deployment status
 status:
-  @echo "=== Dependency Status ==="
+  @echo "=== 📊 Build Environment Status ==="
   @./scripts/check-deps.sh || echo "❌ Some dependencies missing - run 'just install-deps'"
   @echo ""
-  @echo "=== Base Image Status ==="
+  @echo "=== 🏗️  Base Image Status ==="
   @if [ -d "output-base" ]; then echo "✅ Base image directory exists"; ls -la output-base/; else echo "❌ No base image found - run 'just build-base'"; fi
   @echo ""
-  @echo "=== Final Image Status ==="
+  @echo "=== 📦 Final Image Status ==="
   @if [ -d "output" ]; then echo "✅ Final image directory exists"; ls -la output/; else echo "❌ No final image found"; fi
   @echo ""
-  @echo "=== Incus Images ==="
+  @echo "=== 🖥️  Incus Images ==="
   @incus image list | grep -E "(ALIAS|proxmox)" || echo "No ProxMox images found in Incus"
+  @echo ""
+  @echo "=== 💾 Disk Usage ==="
+  @du -sh output/ output-base/ packer_cache/ 2>/dev/null || echo "No build directories found"
+
+# Quick status check (essential info only)
+status-quick:
+  @echo "🔍 Quick Status Check:"
+  @echo -n "Dependencies: "; ./scripts/check-deps.sh --quiet && echo "✅ OK" || echo "❌ Missing"
+  @echo -n "Base Image: "; [ -d "output-base" ] && echo "✅ Ready" || echo "❌ Missing"
+  @echo -n "Final Image: "; [ -d "output" ] && echo "✅ Ready" || echo "❌ Missing"
+  @echo -n "Incus Images: "; incus image list | grep -q proxmox && echo "✅ Available" || echo "❌ None"
+
+# Show available recipes with descriptions
+help:
+  @echo "🚀 Available build recipes:"
+  @echo ""
+  @echo "📦 Image Building:"
+  @echo "  build              - Build Proxmox image with Packer"
+  @echo "  build-base         - Build base image (slow, run once)"
+  @echo "  provision-only     - Fast provisioning iteration"
+  @echo "  build-full         - Complete workflow: base + provision"
+  @echo ""
+  @echo "🖥️  Incus Integration:"
+  @echo "  import-to-incus    - Convert and import image to Incus"
+  @echo "  list-incus-images  - Show Incus images"
+  @echo "  clean-incus-images - Remove Proxmox images from Incus"
+  @echo ""
+  @echo "🗑️  Cleanup:"
+  @echo "  clean              - Clean build artifacts"
+  @echo "  clean-all          - Clean everything"
+  @echo "  clean-temp         - Clean only temporary files"
+  @echo ""
+  @echo "🔧 Utilities:"
+  @echo "  status             - Show comprehensive status"
+  @echo "  status-quick       - Quick status check"
+  @echo "  validate           - Validate Packer configuration"
+  @echo "  check-deps         - Check dependencies"
