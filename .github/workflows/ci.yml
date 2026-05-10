@@ -28,7 +28,9 @@ jobs:
 
       - name: Install Galaxy requirements
         working-directory: ansible
-        run: ansible-galaxy install -r requirements.yaml -p galaxy_roles
+        run: |
+          ansible-galaxy role install -r requirements.yaml -p galaxy_roles
+          ansible-galaxy collection install -r requirements.yaml
 
       - name: Run ansible-lint
         working-directory: ansible
@@ -62,7 +64,9 @@ jobs:
 
       - name: Install Galaxy requirements
         working-directory: ansible
-        run: ansible-galaxy install -r requirements.yaml -p galaxy_roles
+        run: |
+          ansible-galaxy role install -r requirements.yaml -p galaxy_roles
+          ansible-galaxy collection install -r requirements.yaml
 
       - name: Run molecule tests
         working-directory: ansible/roles/${{ matrix.role }}

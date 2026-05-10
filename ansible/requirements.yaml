@@ -1,6 +1,7 @@
 ---
 roles:
   - src: ironicbadger.docker_compose_generator
+    version: "v2.1.1"
   - src: ironicbadger.proxmox_nag_removal
 
   - src: geerlingguy.docker
