@@ -14,7 +14,7 @@ platforms:
     tmpfs:
       - /run
       - /tmp
-    command: ""
+    command: "sleep infinity"
 provisioner:
   name: ansible
   config_options:

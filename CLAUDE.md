@@ -58,14 +58,16 @@ Always squash-merge PRs so main history is one commit per feature/fix. Use `gh p
 
 ## CI Discipline
 
-**Always run CI locally before pushing, and always verify CI passes after pushing.**
+**Always run tests locally first. GitHub Actions minutes are a limited resource — burning CI runs on failures that could be caught locally wastes quota and slows the feedback loop.**
+
+Rule: if you touched Ansible roles, run lint and molecule locally before pushing. Only push when local tests pass. Use CI as a final gate, not a debugging tool.
 
 ```bash
 # Before every push — run both checks locally:
-just ansible lint              # ansible-lint on all roles
-just ansible molecule-test ROLE=<role>  # molecule for any role you touched
+just ansible lint                          # ansible-lint on all roles
+just ansible molecule-test ROLE=<role>     # molecule for any role you touched
 
-# After pushing — check CI status:
+# After pushing — verify CI passed:
 gh run list --limit 5          # see recent runs
 gh run watch                   # stream the current run live
 ```

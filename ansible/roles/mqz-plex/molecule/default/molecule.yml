@@ -16,7 +16,7 @@ platforms:
       - /tmp
     volumes:
       - /var/lib/docker
-    command: ""
+    command: "sleep infinity"
 provisioner:
   name: ansible
   config_options:
