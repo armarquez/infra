@@ -22,5 +22,6 @@ provisioner:
   config_options:
     defaults:
       remote_tmp: /tmp
+      roles_path: "../../../../galaxy_roles:../../../"
 verifier:
   name: ansible
