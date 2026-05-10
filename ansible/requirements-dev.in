@@ -1,6 +1,5 @@
 # Development and testing dependencies
-# Locks against versions resolved in requirements.txt
--c requirements.txt
+-r requirements.in
 
 # Linting
 ansible-lint
@@ -10,3 +9,6 @@ molecule
 molecule-docker
 pytest
 pytest-testinfra
+
+# Git hooks
+pre-commit

@@ -1,0 +1,57 @@
+---
+- name: Configure iGPU passthrough in LXC config (runs on Proxmox host)
+  ansible.builtin.include_tasks: igpu_passthrough.yaml
+  when:
+    - plex_igpu_passthrough | bool
+    - ansible_hostname == 'phoenix'
+
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - curl
+      - nfs-common
+    state: present
+    update_cache: true
+
+- name: Install Docker
+  ansible.builtin.include_tasks: docker.yaml
+
+- name: Create Plex appdata directory
+  ansible.builtin.file:
+    path: "{{ plex_appdata_path }}"
+    state: directory
+    owner: "{{ plex_uid }}"
+    group: "{{ plex_gid }}"
+    mode: "0755"
+
+- name: Mount NFS media share from cerebro
+  ansible.posix.mount:
+    src: "{{ plex_nfs_server }}:{{ plex_nfs_media_export }}"
+    path: "{{ plex_nfs_mount_path }}"
+    fstype: nfs
+    opts: "ro,nfsvers=4,hard,intr,rsize=8192,wsize=8192,timeo=14"
+    state: mounted
+
+- name: Run Plex container
+  community.docker.docker_container:
+    name: "{{ plex_container_name }}"
+    image: "{{ plex_image }}"
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    devices:
+      - "/dev/dri/card0:/dev/dri/card0"
+      - "/dev/dri/renderD128:/dev/dri/renderD128"
+    volumes:
+      - "{{ plex_appdata_path }}:/config"
+      - "{{ plex_nfs_mount_path }}:{{ plex_nfs_mount_path }}:ro"
+    tmpfs:
+      - "/transcode:noexec,nosuid,size={{ plex_transcode_size }}"
+    env:
+      PUID: "{{ plex_uid }}"
+      PGID: "{{ plex_gid }}"
+      TZ: "{{ timezone }}"
+      PLEX_CLAIM: "{{ plex_claim_token }}"
+      ADVERTISE_IP: "{{ plex_advertise_ip }}"
+    pull: true
+  notify: Restart Plex

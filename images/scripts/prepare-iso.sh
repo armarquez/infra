@@ -46,7 +46,7 @@ echo -e "${YELLOW}🔨 Preparing ISO with embedded answer file...${NC}"
 if ! command -v proxmox-auto-install-assistant &> /dev/null; then
     echo -e "${RED}❌ proxmox-auto-install-assistant not found${NC}"
     echo -e "${YELLOW}Installing proxmox-auto-install-assistant...${NC}"
-    
+
     # Try to install it
     if command -v apt &> /dev/null; then
         # On Debian/Ubuntu systems, it might be available in the Proxmox repo

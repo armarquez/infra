@@ -1,0 +1,11 @@
+---
+- name: Restart Plex
+  community.docker.docker_container:
+    name: plex
+    state: started
+    restart: true
+
+- name: Restart Plex LXC
+  ansible.builtin.command: "pct reboot {{ plex_lxc_ctid }}"
+  delegate_to: phoenix
+  changed_when: true

@@ -4,12 +4,6 @@ export RUST_BACKTRACE := bt
 log := "warn"
 export JUST_LOG := log
 
-# --- Python Environment & Dependencies ---
-_python_req_in_prod   := "requirements.in"
-_python_req_txt_prod  := "requirements.txt"
-_python_req_in_dev    := "requirements-dev.in"
-_python_req_txt_dev   := "requirements-dev.txt"
-
 # --- Ansible Galaxy ---
 _ansible_galaxy_req_file := "requirements.yaml"
 
@@ -45,91 +39,62 @@ check-incus-instance HOST:
   if ! incus list --format csv | grep -i -q "^{{HOST}},running"; then
     echo "⚠️  Instance '{{HOST}}' is not running. Starting it now..."
     incus start {{HOST}}
-    sleep 5  # Give some time for it to start
+    sleep 5
   fi
   echo "✅  Instance '{{HOST}}' is running."
 
-# Create a venv if it doesn't exist and upgrade pip
-venv:
+##########
+## Python environment (uv)
+##########
+
+# Create .venv and install all dev dependencies (production + testing + linting)
+install:
   #!/usr/bin/env sh
-  if [ ! -d .venv ]; then
-    echo "🐍 Creating Python virtual environment using \`python --version\`..."
-    python -m venv .venv
-  else
-    echo "🐍 Python virtual environment .venv already exists."
+  if ! command -v uv >/dev/null; then
+    echo "❌ uv not found — install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    exit 1
   fi
-  echo "🐍 Upgrading pip in .venv..."
-  .venv/bin/pip install --upgrade pip
+  echo "🐍 Creating/updating virtual environment with uv..."
+  uv venv .venv --python 3.12
+  echo "📦 Syncing production dependencies..."
+  uv pip install -r requirements.in
+  echo "📦 Syncing development dependencies..."
+  uv pip install -r requirements-dev.in
+  echo "🎉 All Python dependencies installed."
 
-# Compile production Python dependencies using pip-compile
-compile-prod: venv
-  #!/usr/bin/env sh
-  if [ -f "{{_python_req_in_prod}}" ]; then
-    echo "📦 Compiling production dependencies from {{_python_req_in_prod}}..."
-    .venv/bin/pip-compile --resolver=backtracking "{{_python_req_in_prod}}" -o "{{_python_req_txt_prod}}"
-    echo "✅ Production requirements compiled to {{_python_req_txt_prod}}"
-  else
-    echo "⚠️ {{_python_req_in_prod}} not found. Skipping production compilation."
-  fi
+# Lock/compile dependencies (regenerates requirements.txt and requirements-dev.txt)
+compile:
+  uv pip compile requirements.in -o requirements.txt
+  uv pip compile requirements-dev.in -o requirements-dev.txt
 
-# Compile development Python dependencies (includes prod)
-compile-dev: compile-prod
-  #!/usr/bin/env sh
-  if [ -f "{{_python_req_in_dev}}" ]; then
-    echo "📦 Compiling development dependencies from {{_python_req_in_dev}}..."
-    .venv/bin/pip-compile --resolver=backtracking "{{_python_req_in_dev}}" -o "{{_python_req_txt_dev}}"
-    echo "✅ Development requirements compiled to {{_python_req_txt_dev}}"
-  else
-    echo "ℹ️ {{_python_req_in_dev}} not found. Skipping development compilation."
-  fi
-
-# Install production Python dependencies from the locked file
-install-prod: venv
-  #!/usr/bin/env sh
-  if [ -f "{{_python_req_txt_prod}}" ]; then
-    echo "🐍 Installing production Python dependencies from {{_python_req_txt_prod}}..."
-    .venv/bin/pip install -r "{{_python_req_txt_prod}}"
-    echo "✅ Production Python dependencies installed."
-  else
-    echo "⚠️ {{_python_req_txt_prod}} not found. Run 'just compile-prod' or ensure the file exists."
-  fi
-
-# Install development Python dependencies (includes prod)
-install-dev: install-prod # Ensure prod dependencies are installed first
-  #!/usr/bin/env sh
-  if [ -f "{{_python_req_txt_dev}}" ]; then
-    echo "🐍 Installing development Python dependencies from {{_python_req_txt_dev}}..."
-    .venv/bin/pip install -r "{{_python_req_txt_dev}}"
-    echo "✅ Development Python dependencies installed."
-  else
-    echo "ℹ️ {{_python_req_txt_dev}} not found. Only production dependencies installed (if {{_python_req_txt_prod}} exists)."
-  fi
-
-# Installs dev dependencies (which includes prod)
-install: compile-dev install-dev
-  @echo "🎉 All Python dependencies compiled and installed."
-
-# Clean the Python virtual environment
+# Remove the virtual environment
 clean-venv:
   rm -rf .venv
-  rm -f {{_python_req_txt_prod}} {{_python_req_txt_dev}} # Also remove generated txt files
-  @echo "🗑️ .venv directory and generated requirements files removed."
+  @echo "🗑️ .venv removed."
 
-# Run Ansible playbook for Proxmox setup
+##########
+## Ansible operations
+##########
+
+# Install Ansible Galaxy requirements
+reqs *FORCE:
+  ansible-galaxy install -r requirements.yaml {{FORCE}}
+
+# Initial Proxmox setup (SSH password auth, run once)
 setup HOST *TAGS: check-op
   ansible-playbook -i ./inventories/home-network/inventory-setup.yaml run.yaml --limit {{HOST}} {{TAGS}} --ask-pass -e SETUP=true
 
-# Run defined Ansible playbook for HOST
+# Run main playbook against a production host
 run HOST *TAGS: check-op
   ansible-playbook -b run.yaml --limit {{HOST}} {{TAGS}}
-
-# Install Ansible Galaxy requirements
-reqs *FORCE: install-prod
-  ansible-galaxy install -r requirements.yaml {{FORCE}}
 
 # Perform an action (encrypt/decrypt/edit) on Ansible vault
 vault ACTION: check-op
   EDITOR='code --wait' ansible-vault {{ACTION}} group_vars/secrets.yaml
+
+# View decrypted vault contents (read-only)
+vault-view: check-op
+  ansible-vault view group_vars/secrets.yaml
 
 # Test vault password retrieval from 1Password
 vault-test: check-op
@@ -142,10 +107,6 @@ vault-test: check-op
     exit 1
   fi
 
-# View decrypted vault contents (read-only)
-vault-view: check-op
-  ansible-vault view group_vars/secrets.yaml
-
 # Install op-vault script to ~/bin/
 install-op-vault:
   #!/usr/bin/env sh
@@ -155,53 +116,23 @@ install-op-vault:
   chmod +x ~/bin/op-vault
   echo "✅ op-vault script installed to ~/bin/op-vault"
 
-# Test Ansible playbook for HOST on incus
-test HOST *TAGS: check-op
-  #!/usr/bin/env sh
-  echo "🧪 Testing Ansible playbook against Incus instance {{HOST}}"
-  just check-incus-instance {{HOST}}
-  echo "🔧 Running playbook..."
-  ansible-playbook -i ./inventories/incus/inventory.yaml -b run.yaml --limit {{HOST}} {{TAGS}}
-  echo "✅ Playbook execution complete for {{HOST}}"
-
-# Reset Incus instance to clean snapshot and run test
-test-clean HOST *TAGS: check-op
-  #!/usr/bin/env sh
-  echo "🔄 Resetting {{HOST}} to clean state and running test..."
-  just ../incus/restore {{HOST}} clean
-  echo "⏳ Waiting for instance to be ready..."
-  sleep 10
-  just test {{HOST}} {{TAGS}}
-
-# Run multiple test iterations with reset between each
-test-iterate HOST COUNT *TAGS: check-op
-  #!/usr/bin/env sh
-  echo "🔁 Running {{COUNT}} test iterations for {{HOST}}"
-  for i in $(seq 1 {{COUNT}}); do
-    echo "--- Iteration $i/{{COUNT}} ---"
-    just test-clean {{HOST}} {{TAGS}}
-    echo "Press Enter to continue to next iteration (or Ctrl+C to stop)..."
-    read
-  done
-
-
 ##########
-## linting & testing
+## Linting & testing
 ##########
 
 # Run ansible-lint on all roles
 lint:
   ansible-lint roles/
 
-# Run full molecule test suite for a role (create, converge, verify, destroy)
+# Run full molecule test suite for a role (create → converge → verify → destroy)
 molecule-test ROLE="mqz-proxmox":
   cd roles/{{ROLE}} && molecule test
 
-# Converge only — run the role without destroying the container (fast iteration)
+# Converge only — applies role without destroying container (fast iteration)
 molecule-converge ROLE="mqz-proxmox":
   cd roles/{{ROLE}} && molecule converge
 
-# Verify the converged container
+# Re-run verify against existing container
 molecule-verify ROLE="mqz-proxmox":
   cd roles/{{ROLE}} && molecule verify
 
@@ -210,19 +141,17 @@ molecule-destroy ROLE="mqz-proxmox":
   cd roles/{{ROLE}} && molecule destroy
 
 ##########
-## repo stuff
+## Repo utilities
 ##########
 
-# updates submodules
+# Update all git submodules to latest remote
 sub-update:
-  #git submodule update --init --recursive
   git submodule update --remote --recursive
 
-# git submodule - repo URL + optional local folder name
+# Add a Galaxy role as a git submodule
 sub-add URL *NAME:
     #!/usr/bin/env sh
     if [ -z "{{NAME}}" ]; then
-        # Extract repo name from URL if no name provided
         basename=$(basename "{{URL}}" .git)
         git submodule add {{URL}} "roles/${basename}"
         git submodule update --init --recursive

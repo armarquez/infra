@@ -4,4 +4,3 @@
   loop: "{{ github_key_users }}"
   loop_control:
     loop_var: item
-

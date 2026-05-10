@@ -13,6 +13,85 @@ Home infrastructure repository using Infrastructure as Code for three physical m
 
 **Tools**: Ansible (config management), Terraform (VM/LXC provisioning), Just (command runner), 1Password CLI + Ansible Vault (secrets), Molecule + Docker (Ansible testing), GitHub Actions (CI).
 
+## Pre-commit Hooks
+
+`.pre-commit-config.yaml` at repo root runs automatically on every `git commit`:
+- **trailing-whitespace** — removes trailing spaces (autofix)
+- **end-of-file-fixer** — ensures files end with a newline (autofix)
+- **check-yaml** — validates YAML syntax
+- **check-merge-conflict** — blocks committing unresolved conflict markers
+
+`ansible-lint` is **not** in pre-commit (too slow for a commit hook) — it runs in CI only.
+
+```bash
+just install-hooks              # Install hooks into .git/hooks/ (once per clone)
+just lint-all                   # Run all hooks against every file (useful after updating hooks config)
+```
+
+The `pre-commit` binary is installed as part of `just ansible install`.
+
+## Branch and PR Workflow
+
+**Never commit directly to `main`.** All work goes through a short-lived branch and a PR. Main is protected by a GitHub Ruleset that requires:
+- A PR to be open (no direct pushes)
+- All CI checks to pass (Ansible Lint + all Molecule jobs)
+- No required approvals (solo dev — self-merge once CI is green)
+
+### Branch naming
+Use `type/short-description`:
+- `feat/` — new role, new service, new Terraform resource
+- `fix/` — bug fix, broken config, failed lint
+- `infra/` — repo tooling, CI, justfile, hooks, docs
+
+### Standard PR flow
+```bash
+git checkout -b feat/my-thing     # create branch off current main
+# ... do work, commit ...
+git push -u origin feat/my-thing  # push branch
+gh pr create --title "..." --body "..."  # open PR
+gh run watch                      # wait for CI
+gh pr merge --squash --delete-branch  # merge once green
+```
+
+### Squash merge
+Always squash-merge PRs so main history is one commit per feature/fix. Use `gh pr merge --squash --delete-branch` to merge and clean up the branch in one step.
+
+## CI Discipline
+
+**Always run CI locally before pushing, and always verify CI passes after pushing.**
+
+```bash
+# Before every push — run both checks locally:
+just ansible lint              # ansible-lint on all roles
+just ansible molecule-test ROLE=<role>  # molecule for any role you touched
+
+# After pushing — check CI status:
+gh run list --limit 5          # see recent runs
+gh run watch                   # stream the current run live
+```
+
+If lint or molecule fails locally, fix it before pushing. After a push, wait for CI to complete and resolve any failures before considering the work done.
+
+## GitHub Issues Workflow
+
+**All planned work must be tracked as GitHub issues — including tasks that will be completed immediately.** Issues act as a resumable checkpoint: if a plan session is interrupted mid-way, the open issues show exactly where work stopped.
+
+```bash
+# Create an issue
+gh issue create --title "Title" --body "Description" --label "enhancement"
+
+# List open issues
+gh issue list
+
+# Close an issue when work is complete
+gh issue close <number>
+
+# View an issue
+gh issue view <number>
+```
+
+**At the start of any plan session**: create a GitHub issue for every task in the plan before implementing anything. Close each issue immediately as its task is completed. This way, if the session is interrupted, the remaining open issues are an exact queue of what's left — another session or parallel agent can pick up from there without re-deriving state from the conversation.
+
 ## Command Routing Architecture
 
 The root `justfile` routes subcommands through `direnv exec` to load the correct environment per subdirectory. **Always invoke sub-project commands through root routing**, not directly:
@@ -32,6 +111,8 @@ Running `just --list` in any subdirectory shows available recipes for that compo
 ```bash
 just bootstrap          # Install direnv
 # After bootstrap: restart shell, then run 'direnv allow' in project root
+just ansible install    # Set up Python venv and install all dev deps
+just install-hooks      # Wire up git pre-commit hooks (run once after cloning)
 ```
 
 ### Ansible (run via `just ansible <recipe>`)
@@ -81,6 +162,24 @@ just incus snapshot-timestamp HOST  # Create timestamped checkpoint
 
 ## Architecture
 
+### Service Architecture on Phoenix
+
+Phoenix (Proxmox host) runs the following infrastructure:
+
+| Resource | Type | VM ID | Purpose |
+|---|---|---|---|
+| `home-assistant` | VM (HAOS) | 100 | Smart home automation — ha.mqz.casa |
+| `plex` | LXC | 200 | Plex Media Server with Intel QuickSync — plex.mqz.casa |
+| `caddy` | LXC | 201 | Reverse proxy + TLS for *.mqz.casa |
+
+**Intel iGPU passthrough for Plex**: The `mqz-plex` role configures `/etc/pve/lxc/200.conf` on the Proxmox host to pass `/dev/dri/card0` and `/dev/dri/renderD128` into the LXC. Plex uses Intel QuickSync for 4K hardware transcoding. The `i915` driver stays loaded on the host — no blacklisting needed for LXC passthrough.
+
+**Caddy + Cloudflare DNS-01**: Caddy runs in the caddy LXC and holds a wildcard TLS cert for `*.mqz.casa`, obtained via Cloudflare DNS-01 challenge (no ports need to be exposed to the internet). All internal services are proxied through Caddy. Public DNS A records (`plex.mqz.casa`, `ha.mqz.casa`, `phoenix.mqz.casa`) point to `192.168.1.240` — Cloudflare proxying is disabled so LAN traffic routes directly.
+
+**Tailscale subnet router**: Tailscale runs on the phoenix host and advertises `192.168.1.0/24`, giving remote access to all LAN services via the same DNS names without additional port-forwarding.
+
+**Media storage**: Plex mounts media from cerebro (Synology NAS at `192.168.1.250`) via NFS read-only at `/mnt/media`.
+
 ### Ansible Testing Methodology
 
 Molecule with Docker driver is the primary testing path. It runs roles inside a Debian container (`geerlingguy/docker-debian12-ansible`) without requiring any local Proxmox or Incus infrastructure.
@@ -101,19 +200,26 @@ When adding a new role, create a molecule scenario with the same structure. Task
 - Proxmox ISO builds extract `initial_password` from vault via `images/scripts/get-vault-password.sh`
 - Molecule CI tests define variables directly in `converge.yml` — no vault access needed in CI
 
+**Secrets that must exist in `secrets.yaml`**:
+- `initial_password` — used for Proxmox ISO unattended install and initial Ansible connection
+- `tailscale_authkey` — Tailscale auth key for `mqz-tailscale` role
+- `cloudflare_caddy_api_token` — Cloudflare API token for Caddy DNS-01 challenge
+- `plex_claim_token` — Plex claim token (expires in 4 minutes; get from plex.tv/claim)
+
 ### Ansible Structure
 
-- `ansible/run.yaml` — main playbook; currently only `mqz-proxmox` role is active (others commented out)
+- `ansible/run.yaml` — main playbook; applies `mqz-proxmox` + `mqz-tailscale` to phoenix, `mqz-plex` to plex LXC, `mqz-caddy` to caddy LXC
 - `ansible/roles/mqz-*` — custom roles prefixed with `mqz-`; external Galaxy roles install to `galaxy_roles/` (gitignored)
-- `ansible/group_vars/` — per-host variable files (`phoenix.yaml`, `cerebro.yaml`, etc.) and encrypted `secrets.yaml`
+- `ansible/group_vars/` — per-host variable files and encrypted `secrets.yaml`
 - `ansible/inventories/home-network/` — production inventory; `inventory-setup.yaml` used for initial `setup` only (SSH password auth)
 - `ansible/ansible.cfg` sets `roles_path = galaxy_roles:roles:submodules`
 
 ### Terraform Structure
 
 Terraform is organized by environment under `terraform/environments/`. The `home` environment manages:
-- Proxmox LXC containers and VMs on phoenix via `bpg/proxmox` provider
+- Proxmox VMs and LXC containers via `bpg/proxmox` provider
 - Tailscale VPN config via `tailscale/tailscale` provider
+- Cloudflare DNS records via `cloudflare/cloudflare` provider
 
 Provider credentials are passed via `TF_VAR_*` environment variables (set in `terraform/.envrc`, which is gitignored). Never use `*.tfvars` files with real secrets.
 
@@ -131,18 +237,18 @@ Phoenix requires manual Proxmox installation using a prepared ISO:
 
 `.github/workflows/ci.yml` runs on every push to `main`:
 - **lint** job: runs `ansible-lint roles/` — no vault access required
-- **molecule** job: runs `molecule test` per role matrix — uses variables defined directly in `converge.yml`
+- **molecule** job: runs `molecule test` per role matrix — currently: `mqz-proxmox`, `mqz-tailscale`, `mqz-plex`, `mqz-caddy`
 
-No secrets are needed in GitHub for basic lint and molecule tests. To add vault-dependent tests, add `ANSIBLE_VAULT_PASSWORD` as a GitHub Actions secret.
+No secrets are needed in GitHub for basic lint and molecule tests.
 
 ### What Cannot Be Tested in Containers
 
 These Ansible tasks require real Proxmox hardware and are disabled in molecule via `converge.yml` variables:
 - ZFS operations (`set_zfs_arc: false`)
-- PCIe passthrough configuration
+- PCIe/iGPU passthrough configuration (`plex_igpu_passthrough: false`)
 - Kernel module loading / nested virtualization (`nested_virtualization_enable: false`)
 - Proxmox web UI modifications
-- Hardware sensor monitoring
+- NFS mounts from cerebro (replaced with local bind mounts in molecule)
 
 ## Troubleshooting
 
@@ -152,4 +258,6 @@ These Ansible tasks require real Proxmox hardware and are disabled in molecule v
 - **Molecule Docker errors**: Ensure Docker Desktop is running with WSL2 integration enabled
 - **Molecule pveversion not found**: Check `prepare.yml` in the molecule scenario — it installs the mock
 - **Terraform init fails**: Run `just terraform init` after any provider version change
-- **Incus connection failures**: Verify remote is configured with `just incus setup-remote` (optional path, not required for development)
+- **Plex no hardware transcoding**: Verify `/dev/dri` devices exist on host (`ls /dev/dri`), check LXC config at `/etc/pve/lxc/200.conf`, ensure `i915` kernel module is loaded (`lsmod | grep i915`)
+- **Caddy TLS errors**: Check Cloudflare API token has `Zone:DNS:Edit` permission for `mqz.casa`; verify nameservers are set to Cloudflare
+- **Plex LXC IP unknown**: After `terraform apply`, check DHCP leases on your router or run `pct exec 200 -- ip addr` on phoenix to find the assigned IP, then update `inventory.yaml`

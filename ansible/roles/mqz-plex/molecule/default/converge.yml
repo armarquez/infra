@@ -1,0 +1,26 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+  vars:
+    timezone: "America/Phoenix"
+    plex_uid: "1000"
+    plex_gid: "1000"
+    plex_claim_token: "test-claim-token"
+    plex_advertise_ip: "http://127.0.0.1:32400"
+    plex_appdata_path: "/opt/appdata/plex"
+    plex_nfs_server: "127.0.0.1"
+    plex_nfs_media_export: "/tmp/fake-media"
+    plex_nfs_mount_path: "/mnt/media"
+    plex_transcode_size: "1g"
+    # Disable passthrough tasks — not applicable in containers
+    plex_igpu_passthrough: false
+  pre_tasks:
+    # NFS won't work in Docker — create a local bind mount for testing
+    - name: Create fake media directory for testing
+      ansible.builtin.file:
+        path: /tmp/fake-media
+        state: directory
+        mode: "0755"
+  roles:
+    - role: mqz-plex

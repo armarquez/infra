@@ -14,14 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install Python dependencies
         working-directory: ansible
-        run: pip install -r requirements-dev.txt
+        run: uv pip install -r requirements-dev.in --system
 
       - name: Install Galaxy requirements
         working-directory: ansible
@@ -39,17 +37,18 @@ jobs:
       matrix:
         role:
           - mqz-proxmox
+          - mqz-tailscale
+          - mqz-plex
+          - mqz-caddy
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install Python dependencies
         working-directory: ansible
-        run: pip install -r requirements-dev.txt
+        run: uv pip install -r requirements-dev.in --system
 
       - name: Install Galaxy requirements
         working-directory: ansible
