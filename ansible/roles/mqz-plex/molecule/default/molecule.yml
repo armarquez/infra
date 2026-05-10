@@ -7,14 +7,14 @@ platforms:
   - name: plex-test
     image: geerlingguy/docker-debian12-ansible:latest
     pre_build_image: true
-    privileged: true # needed for Docker-in-Docker
+    privileged: true
+    cgroupns_mode: host
     capabilities:
       - SYS_ADMIN
     tmpfs:
       - /run
       - /tmp
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - /var/lib/docker
     command: ""
 provisioner:

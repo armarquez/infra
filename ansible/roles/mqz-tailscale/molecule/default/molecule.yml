@@ -7,7 +7,8 @@ platforms:
   - name: tailscale-test
     image: geerlingguy/docker-debian12-ansible:latest
     pre_build_image: true
-    privileged: true # tailscaled needs elevated privileges
+    privileged: true
+    cgroupns_mode: host
     capabilities:
       - NET_ADMIN
       - SYS_MODULE

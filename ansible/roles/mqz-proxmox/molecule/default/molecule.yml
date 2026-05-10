@@ -8,17 +8,15 @@ driver:
   name: docker
 platforms:
   - name: phoenix-test
-    # Pre-built image with systemd and Python — standard for Ansible role testing
     image: geerlingguy/docker-debian12-ansible:latest
     pre_build_image: true
     privileged: false
+    cgroupns_mode: host
     capabilities:
       - SYS_ADMIN
     tmpfs:
       - /run
       - /tmp
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     command: ""
 provisioner:
   name: ansible
