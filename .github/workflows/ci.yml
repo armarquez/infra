@@ -19,7 +19,12 @@ jobs:
 
       - name: Install Python dependencies
         working-directory: ansible
-        run: uv pip install -r requirements-dev.in --system
+        run: |
+          uv venv .venv --python 3.12
+          uv pip install -r requirements-dev.in
+
+      - name: Add venv to PATH
+        run: echo "${{ github.workspace }}/ansible/.venv/bin" >> $GITHUB_PATH
 
       - name: Install Galaxy requirements
         working-directory: ansible
@@ -48,7 +53,12 @@ jobs:
 
       - name: Install Python dependencies
         working-directory: ansible
-        run: uv pip install -r requirements-dev.in --system
+        run: |
+          uv venv .venv --python 3.12
+          uv pip install -r requirements-dev.in
+
+      - name: Add venv to PATH
+        run: echo "${{ github.workspace }}/ansible/.venv/bin" >> $GITHUB_PATH
 
       - name: Install Galaxy requirements
         working-directory: ansible
