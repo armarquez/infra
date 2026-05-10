@@ -1,0 +1,68 @@
+version: '3.9'
+services:
+  olivetin-channels: # This docker-compose typically requires no editing. Use the Environment variables section of Portainer to set your values.
+    # 2025.03.27
+    # GitHub home for this project: https://github.com/bnhf/OliveTin.
+    # Docker container home for this project with setup instructions: https://hub.docker.com/r/bnhf/olivetin.
+    image: bnhf/olivetin:latest
+    container_name: olivetin
+    hostname: olivetin
+    dns_search: walrus-woodpecker.ts.net
+    ports:
+      - 1337:1337
+    environment:
+      - OLIVETIN_COMPOSE=2025.03.26
+      - CHANNELS_DVR=192.168.1.250:8089
+      - CHANNELS_DVR_ALTERNATES= # Space separated list of alternate Channels DVR servers to choose from in the form hostname:port or ip:port.
+      - CHANNELS_CLIENTS= # Space separated list of Channels DVR clients you'd like notifications sent to in the form hostname or IP.
+      - ALERT_SMTP_SERVER= # SMTP server to use for sending alert e-mails. smtp.gmail.com:587 for example.
+      - ALERT_EMAIL_FROM= # Sender address for alert e-mails.
+      - ALERT_EMAIL_PASS= # SMTP "app" password established through GMail or Yahoo Mail. Do not use your everyday e-mail address.
+      - ALERT_EMAIL_TO= # Recipient address for alert e-mails.
+      - UPDATE_YAMLS=true # Set this to true to update config.yaml.
+      - UPDATE_SCRIPTS=true # Set this to true to update all included scripts.
+      - TZ=America/Phoenix # Add your local timezone in standard linux format. E.G. US/Eastern, US/Central, US/Mountain, US/Pacific, etc.
+      - PORTAINER_TOKEN=${PORTAINER_TOKEN} # Generate via <username> dropdown (upper right of WebUI), "My account", API tokens.
+      - PORTAINER_HOST=192.168.1.250 # Hostname or IP of the Docker host you're running Portainer on.
+      - PORTAINER_PORT=9443 # https port you're running Portainer on. 9443 is the default.
+      - PORTAINER_ENV=13370 # Set this is if you're using an alternate Portainer Environment for some reason. 2 is the default.
+      - PERSISTENT_LOGS=false # For supported Actions, log files are retained on an ongoing basis. false is the default.
+    volumes:
+      - /volume1/docker/olivetin/config:/config
+      - /volume1/ChannelsDVR:/mnt/192.168.1.250-8089 # This can either be a Docker volume or a host directory that's connected via Samba or NFS to your Channels DVR network share.
+      - /var/packages/ChannelsDVR/target/channels-dvr:/mnt/192.168.1.250-8089_logs # This can either be a Docker volume or a host directory that's connected via Samba or NFS to your Channels DVR logs network share.
+      - /volume1/ChannelsDVR:/mnt/192.168.1.250-8089_ta # This can either be a Docker volume or a host directory that's connected via Samba or NFS to your TubeArchivist videos network share.
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  static-file-server:
+    image: halverneus/static-file-server:latest
+    container_name: static-file-server
+    dns_search: walrus-woodpecker.ts.net
+    ports:
+      - 8080:8080
+    environment:
+      - FOLDER=/web
+    volumes:
+      - /volume1/docker/olivetin/config/data:/web
+    restart: unless-stopped
+
+#0#volumes: # Remove the #x# to enable. Use this section if you've setup a docker volume named channels-dvr, with CIFS or NFS, to bind to /mnt/dvr inside the container. Set ${DVR_SHARE} to channels-dvr (DVR_SHARE=channels_dvr) in that example.
+  #1#channels-dvr:
+    #1#external: true
+  #2#channels-dvr-logs:
+    #2#external: true
+  #3#tubearchivist:
+    #3#external: true
+  #4#channels-dvr2:
+    #4#external: true
+  #5#channels-dvr2-logs:
+    #5#external: true
+  #6#tubearchivist2:
+    #6#external: true
+  #7#channels-dvr3:
+    #7#external: true
+  #8#channels-dvr3-logs:
+    #8#external: true
+  #9#tubearchivist3:
+    #9#external: true

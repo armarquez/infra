@@ -1,0 +1,3 @@
+# Override variables for Incus testing
+# Disable backup_etc since file transfer has TLS issues with remote Incus
+backup_etc: false

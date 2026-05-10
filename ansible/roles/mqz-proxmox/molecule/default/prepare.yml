@@ -1,0 +1,12 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install mock pveversion command
+      ansible.builtin.copy:
+        dest: /usr/local/bin/pveversion
+        content: |
+          #!/bin/bash
+          echo "pve-manager/9.1-1/1234567890abcdef (running kernel: 6.8.12-1-pve)"
+        mode: "0755"

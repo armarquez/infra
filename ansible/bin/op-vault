@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# op-vault - 1Password CLI integration for Ansible Vault
+#
+# This script retrieves the Ansible vault password from 1Password.
+# Configure by setting the OP_VAULT_ITEM environment variable to your
+# 1Password item reference (e.g., "op://vault/ansible-vault/password")
+#
+
+set -euo pipefail
+
+# Default 1Password item reference for ansible vault password
+# Override by setting OP_VAULT_ITEM environment variable
+VAULT_ITEM="${OP_VAULT_ITEM:-op://Private/Infra-Ansible-vault/password}"
+
+# Check if 1Password CLI is available
+if ! command -v op >/dev/null 2>&1 && ! command -v op.exe >/dev/null 2>&1; then
+    echo "Error: 1Password CLI (op) not found in PATH" >&2
+    exit 1
+fi
+
+# Use op.exe on Windows/WSL if available, otherwise use op
+OP_CMD="op"
+if command -v op.exe >/dev/null 2>&1; then
+    OP_CMD="op.exe"
+fi
+
+# Retrieve the password from 1Password
+# The output goes to stdout for Ansible to consume
+if ! $OP_CMD read "$VAULT_ITEM" 2>/dev/null; then
+    echo "Error: Failed to retrieve vault password from 1Password" >&2
+    echo "Item reference: $VAULT_ITEM" >&2
+    echo "Make sure you're signed in with: op signin" >&2
+    exit 1
+fi

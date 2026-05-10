@@ -14,9 +14,9 @@ ANSWER_FILE="$PROJECT_DIR/http/auto.toml"
 OUTPUT_DIR="$PROJECT_DIR/downloads"
 
 # ISO details
-PROXMOX_ISO_URL="https://enterprise.proxmox.com/iso/proxmox-ve_9.0-1.iso"
-PROXMOX_ISO_NAME="proxmox-ve_9.0-1.iso"
-PREPARED_ISO_NAME="proxmox-ve_9.0-1-auto.iso"
+PROXMOX_ISO_URL="https://enterprise.proxmox.com/iso/proxmox-ve_9.1-1.iso"
+PROXMOX_ISO_NAME="proxmox-ve_9.1-1.iso"
+PREPARED_ISO_NAME="proxmox-ve_9.1-1-auto.iso"
 
 echo -e "${BLUE}🔧 Preparing Proxmox VE ISO with automated installation...${NC}"
 
@@ -71,4 +71,5 @@ proxmox-auto-install-assistant prepare-iso \
     --output "$OUTPUT_DIR/$PREPARED_ISO_NAME"
 
 echo -e "${GREEN}✅ Prepared ISO created: $OUTPUT_DIR/$PREPARED_ISO_NAME${NC}"
-echo -e "${BLUE}💡 Update your Packer configuration to use this prepared ISO${NC}"
+echo -e "${BLUE}💡 Flash this ISO to a USB drive for bare-metal Proxmox installation${NC}"
+echo -e "${BLUE}   e.g.: sudo dd if=$OUTPUT_DIR/$PREPARED_ISO_NAME of=/dev/sdX bs=4M status=progress${NC}"

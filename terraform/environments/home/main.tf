@@ -1,15 +1,31 @@
 terraform {
+  required_version = ">= 1.5"
+
   required_providers {
     proxmox = {
-      source = "telmate/proxmox"
-      version = "2.9.14"
+      source  = "bpg/proxmox"
+      version = "~> 0.70"
+    }
+    tailscale = {
+      source  = "tailscale/tailscale"
+      version = "~> 0.17"
     }
   }
 }
 
 provider "proxmox" {
-    pm_api_url = var.proxmox_api_url
-    pm_user = var.proxmox_api_user
-    pm_password = var.proxmox_api_pass
-    pm_tls_insecure = var.proxmox_ignore_tls
+  endpoint  = var.proxmox_endpoint
+  api_token = var.proxmox_api_token
+  insecure  = var.proxmox_insecure
 }
+
+provider "tailscale" {
+  oauth_client_id     = var.tailscale_oauth_client_id
+  oauth_client_secret = var.tailscale_oauth_client_secret
+}
+
+# Resources go here — e.g.:
+# module "containers" {
+#   source = "../../modules/lxc"
+#   ...
+# }

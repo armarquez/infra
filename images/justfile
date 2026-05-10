@@ -1,215 +1,32 @@
-# Default command - show help
 default:
-  @just help
+  just --list
 
-# Build the Proxmox image
-build *ARGS:
-  @just _ensure-deps
-  @./scripts/validate.sh
-  @echo "Running Packer build..."
-  @./scripts/build-with-kvm.sh {{ARGS}}
-
-# Initializes and validates the Packer configuration
-validate:
-  @just _ensure-deps
-  @./scripts/validate.sh
-
-# === IMAGE IMPORT RECIPES ===
-
-# Convert built image to Incus format and import
-import-to-incus:
-  @./scripts/convert-to-incus.sh
-
-# Import image to Incus with force (removes existing image)
-import-to-incus-force:
-  @echo "🔄 Force importing to Incus (will remove existing image)..."
-  @./scripts/convert-to-incus.sh
-
-# Check what images are available in Incus
-list-incus-images:
-  @echo "=== Incus Images ==="
-  @incus image list
-
-# Clean up Incus images (removes Proxmox images)
-clean-incus-images:
-  @echo "🗑️  Removing Proxmox images from Incus..."
-  @incus image list | grep proxmox | awk '{print $$2}' | xargs -r incus image delete || echo "No Proxmox images found"
-  @echo "✅ Incus cleanup complete"
-
-# Build and import to Incus in one step
-build-and-import *ARGS:
-  @just _ensure-deps
-  @./scripts/validate.sh
-  @echo "Running Packer build..."
-  @./scripts/build-with-kvm.sh {{ARGS}}
-  @echo "Converting to Incus format..."
-  @./scripts/convert-to-incus.sh
-
-# === CLEANUP RECIPES ===
-
-# Clean up build artifacts
-clean:
-  @echo "🗑️  Cleaning up build artifacts..."
-  rm -rf output/
-  rm -rf packer_cache/
-  @echo "✅ Cleanup complete"
-
-# Clean everything (build artifacts + Incus images)
-clean-all:
-  @echo "🗑️  Cleaning everything..."
-  @just clean
-  @just clean-incus-images
-  @just clean-base
-  @echo "✅ Complete cleanup done"
-
-# Clean only temporary files (keep final images)
-clean-temp:
-  @echo "🗑️  Cleaning temporary files..."
-  rm -rf packer_cache/
-  rm -rf output/incus-unified-image/
-  rm -f output/*.tar
-  rm -f output/*.tar.gz
-  rm -f output/*.tar.xz
-  @echo "✅ Temporary files cleaned"
-
-# Internal recipe to ensure dependencies are met
-_ensure-deps:
-  @./scripts/check-deps.sh --quiet || (echo "🔧 Dependencies missing. Installing automatically..." && ./scripts/install-deps.sh)
-
-# Check dependencies status
-check-deps:
-  @./scripts/check-deps.sh
-
-# Force install/update all dependencies
-install-deps:
-  @./scripts/install-deps.sh
-
-# Check KVM availability and provide setup instructions
-check-kvm:
-  @./scripts/check-kvm.sh
-
-# Prepare Proxmox ISO with embedded answer file
+# Generate answer file from Ansible vault, then prepare bootable Proxmox ISO
 prepare-iso:
+  @./scripts/generate-answer-file.sh
   @./scripts/prepare-iso.sh
 
-# Build with debug logging (PACKER_LOG=1)
-build-debug *ARGS:
-  @just _ensure-deps
-  @./scripts/validate.sh
-  @echo "🐛 Running Packer build with debug logging..."
-  @PACKER_LOG=1 ./scripts/build-with-kvm.sh {{ARGS}}
+# Generate Proxmox answer file only (pulls password from Ansible vault via 1Password)
+generate-answer-file:
+  @./scripts/generate-answer-file.sh
 
-# Build with trace logging (most verbose)
-build-trace *ARGS:
-  @just _ensure-deps
-  @./scripts/validate.sh
-  @echo "🔍 Running Packer build with trace logging..."
-  @PACKER_LOG=TRACE ./scripts/build-with-kvm.sh {{ARGS}}
-
-# Build with custom log level (DEBUG, INFO, WARN, ERROR, TRACE)
-build-log LEVEL *ARGS:
-  @just _ensure-deps
-  @./scripts/validate.sh
-  @echo "📝 Running Packer build with {{LEVEL}} logging..."
-  @PACKER_LOG={{LEVEL}} ./scripts/build-with-kvm.sh {{ARGS}}
-
-# Build and import with debug logging
-build-and-import-debug *ARGS:
-  @just _ensure-deps
-  @./scripts/validate.sh
-  @echo "🐛 Running Packer build with debug logging..."
-  @PACKER_LOG=1 ./scripts/build-with-kvm.sh {{ARGS}}
-  @echo "Converting to Incus format..."
-  @./scripts/convert-to-incus.sh
-
-# Build with verbose Ansible output for troubleshooting
-build-ansible-debug *ARGS:
-  @just _ensure-deps
-  @./scripts/validate.sh
-  @echo "🐛 Running Packer build with verbose Ansible output..."
-  @ANSIBLE_STDOUT_CALLBACK=debug PACKER_LOG=1 ./scripts/build-with-kvm.sh {{ARGS}}
-
-# === ITERATIVE DEVELOPMENT RECIPES ===
-
-# Build base Proxmox image (slow, run once)
-build-base *ARGS:
-  @just _ensure-deps
-  @echo "🏗️  Building base Proxmox image (this takes ~10 minutes)..."
-  @./scripts/build-base.sh {{ARGS}}
-
-# Fast provisioning iteration using existing base image
-provision-only *ARGS:
-  @just _ensure-deps
-  @echo "⚡ Fast provisioning iteration using base image..."
-  @./scripts/build-provision.sh {{ARGS}}
-
-# Debug provisioning with verbose output
-provision-debug *ARGS:
-  @just _ensure-deps
-  @echo "🐛 Debug provisioning with verbose output..."
-  @ANSIBLE_STDOUT_CALLBACK=debug PACKER_LOG=1 ./scripts/build-provision.sh {{ARGS}}
-
-# Clean up base image artifacts
-clean-base:
-  @echo "🗑️  Cleaning base image artifacts..."
-  rm -rf output-base/
-  @echo "✅ Base artifacts cleaned"
-
-# Full workflow: build base, then provision
-build-full *ARGS:
-  @echo "🚀 Running full build workflow..."
-  @just build-base {{ARGS}}
-  @just provision-only {{ARGS}}
-
-# === STATUS & INFO RECIPES ===
-
-# Show comprehensive build and deployment status
+# Show ISO build status
 status:
-  @echo "=== 📊 Build Environment Status ==="
-  @./scripts/check-deps.sh || echo "❌ Some dependencies missing - run 'just install-deps'"
-  @echo ""
-  @echo "=== 🏗️  Base Image Status ==="
-  @if [ -d "output-base" ]; then echo "✅ Base image directory exists"; ls -la output-base/; else echo "❌ No base image found - run 'just build-base'"; fi
-  @echo ""
-  @echo "=== 📦 Final Image Status ==="
-  @if [ -d "output" ]; then echo "✅ Final image directory exists"; ls -la output/; else echo "❌ No final image found"; fi
-  @echo ""
-  @echo "=== 🖥️  Incus Images ==="
-  @incus image list | grep -E "(ALIAS|proxmox)" || echo "No ProxMox images found in Incus"
-  @echo ""
-  @echo "=== 💾 Disk Usage ==="
-  @du -sh output/ output-base/ packer_cache/ 2>/dev/null || echo "No build directories found"
-
-# Quick status check (essential info only)
-status-quick:
-  @echo "🔍 Quick Status Check:"
-  @echo -n "Dependencies: "; ./scripts/check-deps.sh --quiet && echo "✅ OK" || echo "❌ Missing"
-  @echo -n "Base Image: "; [ -d "output-base" ] && echo "✅ Ready" || echo "❌ Missing"
-  @echo -n "Final Image: "; [ -d "output" ] && echo "✅ Ready" || echo "❌ Missing"
-  @echo -n "Incus Images: "; incus image list | grep -q proxmox && echo "✅ Available" || echo "❌ None"
-
-# Show available recipes with descriptions
-help:
-  @echo "🚀 Available build recipes:"
-  @echo ""
-  @echo "📦 Image Building:"
-  @echo "  build              - Build Proxmox image with Packer"
-  @echo "  build-base         - Build base image (slow, run once)"
-  @echo "  provision-only     - Fast provisioning iteration"
-  @echo "  build-full         - Complete workflow: base + provision"
-  @echo ""
-  @echo "🖥️  Incus Integration:"
-  @echo "  import-to-incus    - Convert and import image to Incus"
-  @echo "  list-incus-images  - Show Incus images"
-  @echo "  clean-incus-images - Remove Proxmox images from Incus"
-  @echo ""
-  @echo "🗑️  Cleanup:"
-  @echo "  clean              - Clean build artifacts"
-  @echo "  clean-all          - Clean everything"
-  @echo "  clean-temp         - Clean only temporary files"
-  @echo ""
-  @echo "🔧 Utilities:"
-  @echo "  status             - Show comprehensive status"
-  @echo "  status-quick       - Quick status check"
-  @echo "  validate           - Validate Packer configuration"
-  @echo "  check-deps         - Check dependencies"
+  #!/usr/bin/env sh
+  echo "=== Proxmox ISO Status ==="
+  if [ -f downloads/proxmox-ve_9.1-1-auto.iso ]; then
+    echo "✅ Prepared ISO ready: downloads/proxmox-ve_9.1-1-auto.iso"
+    ls -lh downloads/proxmox-ve_9.1-1-auto.iso
+  elif [ -f downloads/proxmox-ve_9.1-1.iso ]; then
+    echo "⚠️  Base ISO present but answer file not embedded — run 'just prepare-iso'"
+    ls -lh downloads/proxmox-ve_9.1-1.iso
+  else
+    echo "❌ No ISO found — run 'just prepare-iso'"
+  fi
+  echo ""
+  echo "=== Answer File ==="
+  if [ -f http/auto.toml ]; then
+    echo "✅ http/auto.toml exists (generated)"
+  else
+    echo "❌ http/auto.toml missing — run 'just generate-answer-file'"
+  fi

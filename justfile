@@ -73,3 +73,16 @@ terraform *ARGS:
 
 incus *ARGS:
   direnv exec ./incus just --justfile incus/justfile {{ARGS}}
+
+images *ARGS:
+  direnv exec ./images just --justfile images/justfile {{ARGS}}
+
+# Full testing workflow: reset instance and run ansible test
+test-workflow HOST *TAGS:
+  #!/usr/bin/env sh
+  echo "🚀 Full testing workflow for {{HOST}}"
+  echo "1️⃣ Resetting instance to clean state..."
+  just incus restore {{HOST}} clean
+  echo "2️⃣ Running Ansible test..."
+  just ansible test {{HOST}} {{TAGS}}
+  echo "✅ Testing workflow complete"

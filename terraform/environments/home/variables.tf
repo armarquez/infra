@@ -1,25 +1,35 @@
-#-------------------------------------------------------------------------------------------#
-# Proxmox Variables 
-# Reference: https://github.com/Telmate/terraform-provider-proxmox/blob/master/docs/index.md
-#-------------------------------------------------------------------------------------------#
+# Proxmox
+# Reference: https://registry.terraform.io/providers/bpg/proxmox/latest/docs
 
-variable "proxmox_api_url" {
-    description = "This is the target Proxmox API endpoint"
-    type = string
-    default = "https://192.168.120.201:8006/api2/json"
+variable "proxmox_endpoint" {
+  description = "Proxmox API endpoint URL"
+  type        = string
+  default     = "https://192.168.1.240:8006"
 }
-variable "proxmox_api_user" {
-    description = "This is the Proxmox API user. Use root@pam or custom. Will need PVEDatastoreUser, PVEVMAdmin, PVETemplateUser permissions"
-    type = string
-    sensitive = true
-    default = "packer-api@pve"
+
+variable "proxmox_api_token" {
+  description = "Proxmox API token (format: user@pam!token-name=uuid-secret)"
+  type        = string
+  sensitive   = true
 }
-variable "proxmox_api_pass" {
-    description = "API user password. Required, sensitive, or use environment variable TF_VAR_proxmox_api_pass"
-    sensitive = true
+
+variable "proxmox_insecure" {
+  description = "Skip TLS certificate verification (acceptable for home lab self-signed certs)"
+  type        = bool
+  default     = true
 }
-variable "proxmox_ignore_tls" {
-    description = "Disable TLS verification while connecting"
-    type = string
-    default = "true"
+
+# Tailscale
+# Reference: https://registry.terraform.io/providers/tailscale/tailscale/latest/docs
+
+variable "tailscale_oauth_client_id" {
+  description = "Tailscale OAuth client ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "tailscale_oauth_client_secret" {
+  description = "Tailscale OAuth client secret"
+  type        = string
+  sensitive   = true
 }

@@ -1,0 +1,32 @@
+default:
+  just --list
+
+env := "home"
+
+# Initialize Terraform providers for an environment
+init:
+  terraform -chdir=environments/{{env}} init
+
+# Show planned changes without applying
+plan:
+  terraform -chdir=environments/{{env}} plan
+
+# Apply planned changes
+apply:
+  terraform -chdir=environments/{{env}} apply
+
+# Destroy all managed resources in an environment
+destroy:
+  terraform -chdir=environments/{{env}} destroy
+
+# Format all .tf files
+fmt:
+  terraform fmt -recursive
+
+# Validate configuration syntax
+validate:
+  terraform -chdir=environments/{{env}} validate
+
+# Show current state
+show:
+  terraform -chdir=environments/{{env}} show

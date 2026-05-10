@@ -1,0 +1,13 @@
+profile: basic
+
+exclude_paths:
+  - galaxy_roles/
+  - .venv/
+  - roles/*/molecule/
+
+warn_list:
+  - yaml[line-length]
+  - name[template]
+
+skip_list:
+  - role-name  # mqz- prefix is intentional

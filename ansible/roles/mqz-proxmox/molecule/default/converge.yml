@@ -1,0 +1,77 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+  vars:
+    # Identity
+    main_username: testuser
+    main_uid: "1000"
+    main_gid: "1000"
+    timezone: "America/Phoenix"
+    target_os: debian
+    # Use a fixed password in tests — no vault in CI
+    initial_password: "TestPassword123!"
+    initial_user: root
+    system_user: localuser
+    enable_system_user_password: false
+    # Skip user SSH key lookups
+    users: []
+    groups_to_create: []
+    package_list: []
+    # Repos / kernel
+    add_backports_repo: false
+    add_pvetest_repo: false
+    system_update_scheduler: false
+    install_specific_kernel: false
+    pin_kernel_enabled: false
+    clean_old_kernels: false
+    # Boot / network
+    global_boot_mode: "efi-grub"
+    disable_ipv6: false
+    configure_network: false
+    dns_servers:
+      - 1.1.1.1
+    set_hostname: phoenix-test
+    set_hostname_fqdn: phoenix-test.local
+    # User management
+    change_root_password: false
+    disable_root_login: false
+    disable_password_auth: false
+    pub_keys_folder: ""
+    change_default_ssh_port: false
+    new_ssh_port: 22
+    # Locales / bash
+    add_locales: false
+    default_locale: "en_US.UTF-8"
+    configure_bash: true
+    bash_history_size: 3000
+    # Services (disable all hardware-dependent ones)
+    apparmor_disable: false
+    fail2ban_enable: false
+    nginx_enable: false
+    web_show_temperatures: false
+    install_packages: ""
+    uninstall_packages: ""
+    install_stresstest_software: false
+    # Hardware (disable in containers)
+    set_zfs_arc: false
+    create_ramfs: false
+    move_logs_tmpfs: false
+    pstate_performance: false
+    nested_virtualization_enable: false
+    disable_ksmtuned: true
+    change_smt: false
+    # Proxmox-specific
+    max_workers: 10
+    download_windows_guest_tools: false
+    download_custom_images: false
+    backup_etc: false
+    update_system_now: false
+    reboot_system: false
+    services_to_disable: []
+    pcie_passthrough:
+      blocklist: []
+      ids: []
+      ids_gpu: []
+  roles:
+    - role: mqz-proxmox

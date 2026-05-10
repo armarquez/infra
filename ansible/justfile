@@ -20,17 +20,24 @@ default:
 # Check if 1Password CLI is installed and authenticated
 check-op:
   #!/usr/bin/env sh
-  if ! command -v op > /dev/null; then
-    echo "❌ 1Password CLI ('op') is not installed. Please install it first."
+  # Check for both 'op' and 'op.exe' (for WSL)
+  OP_CMD=""
+  if command -v op.exe > /dev/null; then
+    OP_CMD="op.exe"
+  elif command -v op > /dev/null; then
+    OP_CMD="op"
+  else
+    echo "❌ 1Password CLI ('op' or 'op.exe') is not installed. Please install it first."
     exit 1
   fi
-  WHOAMI_OUTPUT="$(op whoami 2>/dev/null)"
-  if [ -z "$WHOAMI_OUTPUT" ]; then
-    echo "❌ 1Password CLI is installed but no authenticated session found. Please run: op signin"
+  # Check for desktop integration or authenticated session
+  ACCOUNT_OUTPUT="$($OP_CMD account list 2>/dev/null)"
+  if [ -z "$ACCOUNT_OUTPUT" ]; then
+    echo "❌ 1Password CLI is installed but no accounts found. Please run: $OP_CMD signin"
     exit 1
   fi
-  echo "✅ 1Password CLI is installed and authenticated as:"
-  echo "$WHOAMI_OUTPUT"
+  echo "✅ 1Password CLI is installed and authenticated:"
+  echo "$ACCOUNT_OUTPUT"
 
 # Ensure Incus instance is running
 check-incus-instance HOST:
@@ -124,11 +131,83 @@ reqs *FORCE: install-prod
 vault ACTION: check-op
   EDITOR='code --wait' ansible-vault {{ACTION}} group_vars/secrets.yaml
 
+# Test vault password retrieval from 1Password
+vault-test: check-op
+  #!/usr/bin/env sh
+  echo "🔐 Testing vault password retrieval from 1Password..."
+  if ~/bin/op-vault > /dev/null; then
+    echo "✅ Successfully retrieved vault password from 1Password"
+  else
+    echo "❌ Failed to retrieve vault password from 1Password"
+    exit 1
+  fi
+
+# View decrypted vault contents (read-only)
+vault-view: check-op
+  ansible-vault view group_vars/secrets.yaml
+
+# Install op-vault script to ~/bin/
+install-op-vault:
+  #!/usr/bin/env sh
+  echo "📦 Installing op-vault script to ~/bin/..."
+  mkdir -p ~/bin
+  cp bin/op-vault ~/bin/op-vault
+  chmod +x ~/bin/op-vault
+  echo "✅ op-vault script installed to ~/bin/op-vault"
+
 # Test Ansible playbook for HOST on incus
 test HOST *TAGS: check-op
+  #!/usr/bin/env sh
+  echo "🧪 Testing Ansible playbook against Incus instance {{HOST}}"
   just check-incus-instance {{HOST}}
+  echo "🔧 Running playbook..."
   ansible-playbook -i ./inventories/incus/inventory.yaml -b run.yaml --limit {{HOST}} {{TAGS}}
+  echo "✅ Playbook execution complete for {{HOST}}"
 
+# Reset Incus instance to clean snapshot and run test
+test-clean HOST *TAGS: check-op
+  #!/usr/bin/env sh
+  echo "🔄 Resetting {{HOST}} to clean state and running test..."
+  just ../incus/restore {{HOST}} clean
+  echo "⏳ Waiting for instance to be ready..."
+  sleep 10
+  just test {{HOST}} {{TAGS}}
+
+# Run multiple test iterations with reset between each
+test-iterate HOST COUNT *TAGS: check-op
+  #!/usr/bin/env sh
+  echo "🔁 Running {{COUNT}} test iterations for {{HOST}}"
+  for i in $(seq 1 {{COUNT}}); do
+    echo "--- Iteration $i/{{COUNT}} ---"
+    just test-clean {{HOST}} {{TAGS}}
+    echo "Press Enter to continue to next iteration (or Ctrl+C to stop)..."
+    read
+  done
+
+
+##########
+## linting & testing
+##########
+
+# Run ansible-lint on all roles
+lint:
+  ansible-lint roles/
+
+# Run full molecule test suite for a role (create, converge, verify, destroy)
+molecule-test ROLE="mqz-proxmox":
+  cd roles/{{ROLE}} && molecule test
+
+# Converge only — run the role without destroying the container (fast iteration)
+molecule-converge ROLE="mqz-proxmox":
+  cd roles/{{ROLE}} && molecule converge
+
+# Verify the converged container
+molecule-verify ROLE="mqz-proxmox":
+  cd roles/{{ROLE}} && molecule verify
+
+# Destroy molecule test container
+molecule-destroy ROLE="mqz-proxmox":
+  cd roles/{{ROLE}} && molecule destroy
 
 ##########
 ## repo stuff

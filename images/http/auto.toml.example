@@ -1,0 +1,19 @@
+# Proxmox VE Automated Installation Answer File — EXAMPLE
+# Copy to auto.toml and fill in values, or run 'just prepare-iso' to generate from vault.
+# Reference: https://pve.proxmox.com/wiki/Automated_Installation#Answer_File_Format_2
+
+[global]
+keyboard = "en-us"
+country = "us"
+timezone = "America/Phoenix"
+fqdn = "phoenix.mqz.casa"
+mailto = "admin@example.com"
+root_password = "<vault:initial_password>"
+
+[network]
+source = "from-dhcp"
+
+[disk-setup]
+disk_list = ["sda"]
+filesystem = "zfs"
+zfs.raid = "raid0"

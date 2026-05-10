@@ -1,0 +1,16 @@
+services:
+  eplustv:
+    image: tonywagner/eplustv
+    environment:
+      PUID: "1028"
+      PGID: "100"
+    ports:
+      - 8093:8000
+    volumes:
+      - /volume1/docker/eplustv:/app/config
+  pluto-for-channels:
+    image: jonmaddox/pluto-for-channels
+    container_name: pluto-for-channels
+    restart: unless-stopped
+    ports:
+      - 8090:80

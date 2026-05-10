@@ -2,110 +2,154 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**SECURITY WARNING**: Never include actual passwords, secrets, or sensitive credentials in this file. Always use placeholder values like `<encrypted_password>` when documenting credential structures.
+
 ## Overview
 
-This is a home infrastructure repository using Ansible for configuration management, Packer for image building, and supporting tools for testing and deployment. The infrastructure consists of three main machines: `phoenix` (Proxmox host), `cerebro` (services), and `dazzler` (additional services).
+Home infrastructure repository using Infrastructure as Code for three physical machines:
+- `phoenix` — Proxmox hypervisor host (192.168.1.240)
+- `cerebro` — Synology NAS / primary services host (192.168.1.250)
+- `dazzler` — additional services, running as LXC on phoenix
+
+**Tools**: Ansible (config management), Terraform (VM/LXC provisioning), Just (command runner), 1Password CLI + Ansible Vault (secrets), Molecule + Docker (Ansible testing), GitHub Actions (CI).
+
+## Command Routing Architecture
+
+The root `justfile` routes subcommands through `direnv exec` to load the correct environment per subdirectory. **Always invoke sub-project commands through root routing**, not directly:
+
+```bash
+just ansible <recipe>   # → direnv exec ./ansible just --justfile ansible/justfile <recipe>
+just images <recipe>    # → direnv exec ./images just --justfile images/justfile <recipe>
+just incus <recipe>     # → direnv exec ./incus just --justfile incus/justfile <recipe>
+just terraform <recipe> # → direnv exec ./terraform just --justfile terraform/justfile <recipe>
+```
+
+Running `just --list` in any subdirectory shows available recipes for that component.
 
 ## Key Commands
 
-### Main Project Commands (Root Level)
+### Bootstrap
 ```bash
-just bootstrap          # Install system dependencies (direnv, asdf)
-just ansible <args>      # Route to ansible justfile commands
-just incus <args>        # Route to incus justfile commands
+just bootstrap          # Install direnv
+# After bootstrap: restart shell, then run 'direnv allow' in project root
 ```
 
-### Ansible Commands (ansible/)
+### Ansible (run via `just ansible <recipe>`)
 ```bash
-just install            # Compile and install all Python dependencies
-just setup HOST         # Initial Proxmox setup (requires --ask-pass, uses 1Password)
-just run HOST           # Run main playbook for HOST
-just test HOST          # Test playbook on Incus instance
-just vault ACTION       # Encrypt/decrypt/edit secrets.yaml (ACTION: encrypt/decrypt/edit)
-just reqs               # Install Ansible Galaxy requirements
+just ansible install        # Compile and install all Python deps (pip-compile + pip install)
+just ansible reqs           # Install Ansible Galaxy requirements to galaxy_roles/
+just ansible setup HOST     # Initial setup with --ask-pass (uses inventory-setup.yaml, SETUP=true)
+just ansible run HOST       # Run main playbook against production host
+just ansible vault edit     # Edit encrypted secrets.yaml (opens in VSCode)
+just ansible vault-view     # View decrypted vault contents
+just ansible vault-test     # Verify 1Password CLI can retrieve vault password
+just ansible install-op-vault  # Install ~/bin/op-vault script (required for vault access)
 ```
 
-### Image Building (images/)
-
-#### Iterative Development Workflow (RECOMMENDED)
+### Ansible Testing
 ```bash
-# Step 1: Build base image once (slow, ~10 minutes)
-just build-base         # Creates base Proxmox installation
-
-# Step 2: Fast iteration on provisioning (fast, ~2 minutes)
-just provision-only     # Apply Ansible provisioning to base image
-just provision-debug    # Same with verbose debugging output
-
-# Utilities
-just status             # Show build status for base and final images
-just clean-base         # Clean base image artifacts
-just build-full         # Complete workflow: base + provision
+just ansible lint                      # Run ansible-lint on all roles
+just ansible molecule-test             # Full test: create → converge → verify → destroy
+just ansible molecule-converge         # Converge only (fast iteration, keeps container running)
+just ansible molecule-verify           # Re-run verify against existing container
+just ansible molecule-destroy          # Destroy test container
+just ansible molecule-test ROLE=mqz-proxmox  # Target a specific role
 ```
 
-#### Legacy Single-Stage Builds
+### Image Building / Proxmox ISO (run via `just images <recipe>`)
 ```bash
-just build              # Build Proxmox image with Packer (slow)
-just build-and-import   # Build and import to Incus (slow)
-just validate           # Validate Packer configuration
-just clean              # Clean build artifacts
-
-# Debug builds for troubleshooting
-just build-debug        # Build with debug logging (PACKER_LOG=1)
-just build-trace        # Build with trace logging (most verbose)
-just build-log LEVEL    # Build with custom log level (DEBUG|INFO|WARN|ERROR|TRACE)
-just build-and-import-debug  # Build and import with debug logging
+just images prepare-iso        # Generate answer file from vault + embed into Proxmox ISO
+just images generate-answer-file  # Generate http/auto.toml from vault only
+just images status             # Show ISO and answer file status
 ```
 
-### Incus Testing (incus/)
+### Terraform (run via `just terraform <recipe>`)
 ```bash
-just attach HOST        # Attach to Incus instance console
-just snapshot HOST NAME # Create snapshot of instance
-just restore HOST NAME  # Restore instance from snapshot
+just terraform init     # Initialize providers (run after adding/changing providers)
+just terraform plan     # Show planned changes
+just terraform apply    # Apply changes
+just terraform fmt      # Format all .tf files
+just terraform validate # Validate configuration syntax
+```
+
+### Incus (optional — requires Linux dev machine with Incus installed)
+```bash
+just incus setup-remote         # Configure remote Incus server at 192.168.1.88:8443
+just incus restore HOST clean   # Restore instance to 'clean' snapshot
+just incus snapshot-timestamp HOST  # Create timestamped checkpoint
 ```
 
 ## Architecture
 
-### Directory Structure
-- `ansible/` - Ansible playbooks and roles for configuration management
-  - `roles/` - Custom roles (mqz-*) and external roles as submodules
-  - `inventories/` - Inventory files for different environments (home-network, incus, vagrant)
-  - `group_vars/` - Variables including encrypted secrets
-- `images/` - Packer configuration for building Proxmox VM images
-- `incus/` - Incus container management for testing
-- `terraform/` - Terraform configuration (minimal/placeholder)
-- `services/` - Docker Compose services organized by host
+### Ansible Testing Methodology
 
-### Environment Management
-- Uses `direnv` for environment-specific configurations
-- Each subdirectory has its own `.envrc` file
-- Python virtual environments managed per component
-- Dependencies compiled with pip-compile
+Molecule with Docker driver is the primary testing path. It runs roles inside a Debian container (`geerlingguy/docker-debian12-ansible`) without requiring any local Proxmox or Incus infrastructure.
+
+- Molecule scenarios live at `ansible/roles/<role>/molecule/default/`
+- `prepare.yml` — sets up the container (e.g., installs mock `pveversion`)
+- `converge.yml` — applies the role with container-safe variables
+- `molecule.yml` — driver config and per-host variable overrides
+
+When adding a new role, create a molecule scenario with the same structure. Tasks that require real hardware (ZFS, kernel modules, PCIe passthrough) are disabled via variables in `converge.yml`.
 
 ### Secret Management
-- Uses 1Password CLI (`op`) for secret retrieval
-- Ansible Vault for encrypted variables in `group_vars/secrets.yaml`
-- VSCode configured as default editor for vault operations
 
-### Testing Workflow
-- Build Proxmox images with Packer
-- Import to Incus for isolated testing
-- Test Ansible playbooks against Incus instances
-- Use snapshots for quick rollback during testing
+**Credential flow**: `ansible/group_vars/secrets.yaml` (Ansible Vault encrypted) is the single source of truth.
+- `ansible.cfg` sets `vault_password_file = ~/bin/op-vault` — this script must be installed via `just ansible install-op-vault`
+- `~/bin/op-vault` calls the 1Password CLI to retrieve the vault password at runtime
+- Most `ansible/justfile` recipes depend on `check-op`, which supports both `op` (Linux/Mac) and `op.exe` (WSL)
+- Proxmox ISO builds extract `initial_password` from vault via `images/scripts/get-vault-password.sh`
+- Molecule CI tests define variables directly in `converge.yml` — no vault access needed in CI
 
-### Host Mapping
-| Purpose | Hostname |
-|---------|----------|
-| Proxmox host | `phoenix` |
-| Services host | `cerebro` |
-| Additional services | `dazzler` |
+### Ansible Structure
 
-## Dependencies
+- `ansible/run.yaml` — main playbook; currently only `mqz-proxmox` role is active (others commented out)
+- `ansible/roles/mqz-*` — custom roles prefixed with `mqz-`; external Galaxy roles install to `galaxy_roles/` (gitignored)
+- `ansible/group_vars/` — per-host variable files (`phoenix.yaml`, `cerebro.yaml`, etc.) and encrypted `secrets.yaml`
+- `ansible/inventories/home-network/` — production inventory; `inventory-setup.yaml` used for initial `setup` only (SSH password auth)
+- `ansible/ansible.cfg` sets `roles_path = galaxy_roles:roles:submodules`
 
-Required tools installed via `just bootstrap`:
-- `direnv` - Environment management
-- `asdf` - Version management (planned)
-- `just` - Command runner
-- `op` (1Password CLI) - Secret management
-- `packer` - Image building
-- `incus` - Container/VM management
-- Python with pip-compile for dependency management
+### Terraform Structure
+
+Terraform is organized by environment under `terraform/environments/`. The `home` environment manages:
+- Proxmox LXC containers and VMs on phoenix via `bpg/proxmox` provider
+- Tailscale VPN config via `tailscale/tailscale` provider
+
+Provider credentials are passed via `TF_VAR_*` environment variables (set in `terraform/.envrc`, which is gitignored). Never use `*.tfvars` files with real secrets.
+
+### Proxmox Installation (phoenix)
+
+Phoenix requires manual Proxmox installation using a prepared ISO:
+1. `just images prepare-iso` — pulls `initial_password` from vault, embeds answer file into Proxmox ISO
+2. Flash `images/downloads/proxmox-ve_*-auto.iso` to USB
+3. Boot phoenix from USB — installs unattended
+4. Run `just ansible setup phoenix` to apply configuration
+
+`images/http/auto.toml` is gitignored (contains vault password at runtime). Use `images/http/auto.toml.example` as reference for the answer file structure.
+
+### CI / GitHub Actions
+
+`.github/workflows/ci.yml` runs on every push to `main`:
+- **lint** job: runs `ansible-lint roles/` — no vault access required
+- **molecule** job: runs `molecule test` per role matrix — uses variables defined directly in `converge.yml`
+
+No secrets are needed in GitHub for basic lint and molecule tests. To add vault-dependent tests, add `ANSIBLE_VAULT_PASSWORD` as a GitHub Actions secret.
+
+### What Cannot Be Tested in Containers
+
+These Ansible tasks require real Proxmox hardware and are disabled in molecule via `converge.yml` variables:
+- ZFS operations (`set_zfs_arc: false`)
+- PCIe passthrough configuration
+- Kernel module loading / nested virtualization (`nested_virtualization_enable: false`)
+- Proxmox web UI modifications
+- Hardware sensor monitoring
+
+## Troubleshooting
+
+- **1Password not authenticating**: Run `just ansible check-op`; ensure `~/bin/op-vault` is installed via `just ansible install-op-vault`
+- **Vault password failure**: Run `just ansible vault-test`
+- **ISO credential mismatch**: Run `just images prepare-iso` to regenerate with current vault credentials
+- **Molecule Docker errors**: Ensure Docker Desktop is running with WSL2 integration enabled
+- **Molecule pveversion not found**: Check `prepare.yml` in the molecule scenario — it installs the mock
+- **Terraform init fails**: Run `just terraform init` after any provider version change
+- **Incus connection failures**: Verify remote is configured with `just incus setup-remote` (optional path, not required for development)

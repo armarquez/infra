@@ -351,6 +351,8 @@ terraform.rc
 #############
 ## CUSTOM
 #############
+# Generated at runtime with vault credentials — never commit
+images/http/auto.toml
 galaxy_roles
 .vault-password
 secrets.yaml

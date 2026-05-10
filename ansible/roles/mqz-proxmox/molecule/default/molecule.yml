@@ -1,0 +1,52 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../../../../requirements.yaml
+    roles-path: ../../../../galaxy_roles
+driver:
+  name: docker
+platforms:
+  - name: phoenix-test
+    # Pre-built image with systemd and Python — standard for Ansible role testing
+    image: geerlingguy/docker-debian12-ansible:latest
+    pre_build_image: true
+    privileged: false
+    capabilities:
+      - SYS_ADMIN
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    command: ""
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      remote_tmp: /tmp
+      allow_world_readable_tmpfiles: true
+  inventory:
+    host_vars:
+      phoenix-test:
+        # Disable tasks that require real Proxmox hardware or kernel modules
+        backup_etc: false
+        configure_network: false
+        set_zfs_arc: false
+        create_ramfs: false
+        move_logs_tmpfs: false
+        pstate_performance: false
+        nested_virtualization_enable: false
+        nginx_enable: false
+        fail2ban_enable: false
+        web_show_temperatures: false
+        pin_kernel_enabled: false
+        install_specific_kernel: false
+        update_system_now: false
+        reboot_system: false
+        disable_ksmtuned: true
+verifier:
+  name: ansible
+lint: |
+  set -e
+  ansible-lint

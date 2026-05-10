@@ -1,0 +1,63 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Ansible Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        working-directory: ansible
+        run: pip install -r requirements-dev.txt
+
+      - name: Install Galaxy requirements
+        working-directory: ansible
+        run: ansible-galaxy install -r requirements.yaml -p galaxy_roles
+
+      - name: Run ansible-lint
+        working-directory: ansible
+        run: ansible-lint roles/
+
+  molecule:
+    name: "Molecule / ${{ matrix.role }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        role:
+          - mqz-proxmox
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        working-directory: ansible
+        run: pip install -r requirements-dev.txt
+
+      - name: Install Galaxy requirements
+        working-directory: ansible
+        run: ansible-galaxy install -r requirements.yaml -p galaxy_roles
+
+      - name: Run molecule tests
+        working-directory: ansible/roles/${{ matrix.role }}
+        run: molecule test
+        env:
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"
