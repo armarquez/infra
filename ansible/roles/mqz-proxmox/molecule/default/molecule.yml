@@ -26,7 +26,6 @@ provisioner:
     defaults:
       remote_tmp: /tmp
       allow_world_readable_tmpfiles: true
-      roles_path: "../../../../galaxy_roles:../../../"
   inventory:
     host_vars:
       phoenix-test:

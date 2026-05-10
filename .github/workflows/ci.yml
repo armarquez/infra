@@ -76,3 +76,5 @@ jobs:
           ANSIBLE_FORCE_COLOR: "1"
           # molecule-docker destroy.yml uses truthy string in when: clause (ansible-core 2.17+ compat issue)
           ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+          # molecule resolves roles_path relative to its tmp dir; use absolute paths instead
+          ANSIBLE_ROLES_PATH: "${{ github.workspace }}/ansible/galaxy_roles:${{ github.workspace }}/ansible/roles"
