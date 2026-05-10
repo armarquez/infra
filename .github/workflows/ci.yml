@@ -74,3 +74,5 @@ jobs:
         env:
           PY_COLORS: "1"
           ANSIBLE_FORCE_COLOR: "1"
+          # molecule-docker destroy.yml uses truthy string in when: clause (ansible-core 2.17+ compat issue)
+          ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
