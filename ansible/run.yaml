@@ -6,26 +6,24 @@
     setup: "{{ lookup('env', 'SETUP') | default('false') }}"
   gather_facts: false
   roles:
-    # - role: geerlingguy.ntp
-    # - role: singleplatform-eng.users
-    # - role: geerlingguy.security
-    # - role: ironicbadger.proxmox_nag_removal
-    # - role: geerlingguy.docker
-    # - role: grog.package
-    # - role: sicruse.powerline-fonts
-    # - role: mqz-github-keys
-    # - role: mqz-zsh
     - role: mqz-proxmox
-    # - role: mqz-phoenix
+    - role: mqz-tailscale
 
+- hosts: plex
+  vars_files:
+    - 'group_vars/secrets.yaml'
+  become: true
+  gather_facts: false
+  roles:
+    - role: mqz-plex
 
-# - hosts: dazzler
-#   vars_files:
-#     - 'group_vars/secrets.yaml'
-#   become: yes
-#   roles:
-#     - role: geerlingguy.docker
-#     - role: grog.package
+- hosts: caddy
+  vars_files:
+    - 'group_vars/secrets.yaml'
+  become: true
+  gather_facts: false
+  roles:
+    - role: mqz-caddy
 
 # - hosts: cerebro
 #   vars_files:

@@ -1,0 +1,34 @@
+---
+- name: Download Docker apt signing key (armored)
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /tmp/docker-archive-keyring.gpg.asc
+    mode: "0644"
+
+- name: Dearmor Docker apt signing key
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /tmp/docker-archive-keyring.gpg.asc
+    creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+- name: Add Docker apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bookworm stable"
+    filename: docker
+    state: present
+
+- name: Install Docker CE
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Enable and start Docker
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+  when: plex_manage_service | default(true)

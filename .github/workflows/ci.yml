@@ -14,18 +14,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install Python dependencies
         working-directory: ansible
-        run: pip install -r requirements-dev.txt
+        run: |
+          uv venv .venv --python 3.12
+          uv pip install -r requirements-dev.in
+
+      - name: Add venv to PATH
+        run: echo "${{ github.workspace }}/ansible/.venv/bin" >> $GITHUB_PATH
 
       - name: Install Galaxy requirements
         working-directory: ansible
-        run: ansible-galaxy install -r requirements.yaml -p galaxy_roles
+        run: |
+          ansible-galaxy role install -r requirements.yaml -p galaxy_roles
+          ansible-galaxy collection install -r requirements.yaml
 
       - name: Run ansible-lint
         working-directory: ansible
@@ -39,21 +44,29 @@ jobs:
       matrix:
         role:
           - mqz-proxmox
+          - mqz-tailscale
+          - mqz-plex
+          - mqz-caddy
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install Python dependencies
         working-directory: ansible
-        run: pip install -r requirements-dev.txt
+        run: |
+          uv venv .venv --python 3.12
+          uv pip install -r requirements-dev.in
+
+      - name: Add venv to PATH
+        run: echo "${{ github.workspace }}/ansible/.venv/bin" >> $GITHUB_PATH
 
       - name: Install Galaxy requirements
         working-directory: ansible
-        run: ansible-galaxy install -r requirements.yaml -p galaxy_roles
+        run: |
+          ansible-galaxy role install -r requirements.yaml -p galaxy_roles
+          ansible-galaxy collection install -r requirements.yaml
 
       - name: Run molecule tests
         working-directory: ansible/roles/${{ matrix.role }}
@@ -61,3 +74,7 @@ jobs:
         env:
           PY_COLORS: "1"
           ANSIBLE_FORCE_COLOR: "1"
+          # molecule-docker destroy.yml uses truthy string in when: clause (ansible-core 2.17+ compat issue)
+          ANSIBLE_ALLOW_BROKEN_CONDITIONALS: "true"
+          # molecule resolves roles_path relative to its tmp dir; use absolute paths instead
+          ANSIBLE_ROLES_PATH: "${{ github.workspace }}/ansible/galaxy_roles:${{ github.workspace }}/ansible/roles"

@@ -1,0 +1,64 @@
+---
+- name: Create caddy system user
+  ansible.builtin.user:
+    name: "{{ caddy_user }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ caddy_data_dir }}"
+    create_home: true
+
+- name: Create Caddy directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ caddy_user }}"
+    group: "{{ caddy_group }}"
+    mode: "0755"
+  loop:
+    - "{{ caddy_config_dir }}"
+    - "{{ caddy_data_dir }}"
+    - "{{ caddy_log_dir }}"
+
+# Download Caddy with Cloudflare DNS plugin from official releases
+# The standard Caddy binary doesn't include DNS plugins — use xcaddy or the
+# official download with plugin support from caddyserver.com/download
+- name: Download Caddy with Cloudflare DNS plugin
+  ansible.builtin.get_url:
+    url: "https://caddyserver.com/api/download?os=linux&arch=amd64&p=github.com%2Fcaddy-dns%2Fcloudflare"
+    dest: "{{ caddy_binary_path }}"
+    mode: "0755"
+    owner: root
+    group: root
+  notify: Restart Caddy
+
+- name: Set Caddy binary capabilities (bind ports < 1024 without root)
+  community.general.capabilities:
+    path: "{{ caddy_binary_path }}"
+    capability: cap_net_bind_service+eip
+    state: present
+  changed_when: false
+
+- name: Deploy Caddyfile from template
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: "{{ caddy_config_dir }}/Caddyfile"
+    owner: "{{ caddy_user }}"
+    group: "{{ caddy_group }}"
+    mode: "0640"
+  no_log: true # prevent Cloudflare token appearing in logs
+  notify: Reload Caddy
+
+- name: Deploy Caddy systemd service
+  ansible.builtin.template:
+    src: caddy.service.j2
+    dest: /etc/systemd/system/caddy.service
+    mode: "0644"
+  notify: Restart Caddy
+
+- name: Enable and start Caddy
+  ansible.builtin.systemd:
+    name: caddy
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: caddy_manage_service | default(true)

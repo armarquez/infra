@@ -1,0 +1,55 @@
+---
+- name: Add Tailscale apt signing key
+  ansible.builtin.get_url:
+    url: https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+
+- name: Add Tailscale apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian bookworm main"
+    filename: tailscale
+    state: present
+
+- name: Install Tailscale
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+
+- name: Enable and start tailscaled
+  ansible.builtin.systemd:
+    name: tailscaled
+    state: started
+    enabled: true
+  when: tailscale_manage_service | default(true)
+
+- name: Build tailscale up arguments
+  ansible.builtin.set_fact:
+    _tailscale_up_args: >-
+      --authkey={{ tailscale_authkey }}
+      {% if tailscale_advertise_routes | length > 0 %}--advertise-routes={{ tailscale_advertise_routes | join(',') }}{% endif %}
+      {% if tailscale_accept_routes %}--accept-routes{% endif %}
+      {% if tailscale_exit_node %}--advertise-exit-node{% endif %}
+  when: tailscale_manage_service | default(true)
+
+- name: Connect to Tailscale network
+  ansible.builtin.command: "tailscale up {{ _tailscale_up_args }}"
+  register: _tailscale_up
+  changed_when: "'already running' not in _tailscale_up.stderr"
+  no_log: true # prevent authkey from appearing in logs
+  when: tailscale_manage_service | default(true)
+
+- name: Enable IP forwarding for subnet routing
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+    sysctl_set: true
+    reload: true
+  loop:
+    - net.ipv4.ip_forward
+    - net.ipv6.conf.all.forwarding
+  when:
+    - tailscale_manage_service | default(true)
+    - tailscale_advertise_routes | length > 0

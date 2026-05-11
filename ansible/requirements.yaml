@@ -1,6 +1,7 @@
 ---
 roles:
   - src: ironicbadger.docker_compose_generator
+    version: "v2.1.1"
   - src: ironicbadger.proxmox_nag_removal
 
   - src: geerlingguy.docker
@@ -18,3 +19,5 @@ collections:
     version: "10.4"
   - name: ansible.posix
     version: "*"
+  - name: community.docker
+    version: ">=3.0.2"

@@ -1,0 +1,5 @@
+---
+tailscale_authkey: ""          # Set in secrets.yaml: tailscale_authkey
+tailscale_advertise_routes: [] # e.g. ["192.168.1.0/24"]
+tailscale_accept_routes: true
+tailscale_exit_node: false

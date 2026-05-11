@@ -1,10 +1,7 @@
 ---
-- hosts: phoenix
-  become: yes
-  tasks:
-  - name: change /etc/hosts
-    lineinfile:
-      path: '/etc/hosts'
-      regexp: '.*pve.*' 
-      line: '192.168.60.201   pve.example.com   pve' 
-      backup: yes
+- name: Change /etc/hosts entry for PVE
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '.*pve.*'
+    line: '192.168.60.201   pve.example.com   pve'
+    backup: true

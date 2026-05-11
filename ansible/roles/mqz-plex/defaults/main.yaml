@@ -1,0 +1,29 @@
+---
+# Plex container image
+plex_image: "plexinc/pms-docker:latest"
+plex_container_name: "plex"
+
+# Paths inside the LXC container
+plex_appdata_path: "/opt/appdata/plex"
+plex_transcode_size: "8g"
+
+# NFS mount from cerebro for media
+plex_nfs_server: "192.168.1.250" # cerebro (Synology NAS)
+plex_nfs_media_export: "/volume1/media"
+plex_nfs_mount_path: "/mnt/media"
+
+# Plex claim token — get from https://www.plex.tv/claim/ (expires in 4 min)
+# Set in secrets.yaml: plex_claim_token
+plex_claim_token: ""
+
+# User/group IDs for file permissions
+plex_uid: "1000"
+plex_gid: "1000"
+
+# Plex advertise IP — used so Plex knows its own address
+plex_advertise_ip: "" # e.g. "http://192.168.1.240:32400"
+
+# iGPU device passthrough — applied to /etc/pve/lxc/<ctid>.conf on the Proxmox HOST
+# Run the mqz-plex role against the Proxmox host (not the LXC) to configure this
+plex_lxc_ctid: 200
+plex_igpu_passthrough: true

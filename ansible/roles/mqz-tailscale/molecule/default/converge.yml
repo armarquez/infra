@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+  vars:
+    # Use a fake authkey — we only test installation, not actual TS network connection
+    tailscale_authkey: "tskey-auth-fake-for-testing"
+    tailscale_advertise_routes:
+      - "192.168.1.0/24"
+    tailscale_accept_routes: true
+    # systemd not available in molecule containers — skip daemon start and network join
+    tailscale_manage_service: false
+  roles:
+    - role: mqz-tailscale

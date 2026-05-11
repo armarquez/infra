@@ -1,0 +1,30 @@
+{# Caddyfile — managed by Ansible, do not edit manually #}
+{
+    email admin@{{ caddy_domain }}
+}
+
+# Wildcard TLS certificate for *.{{ caddy_domain }} via Cloudflare DNS-01 challenge
+*.{{ caddy_domain }} {
+    tls {
+        dns cloudflare {{ cloudflare_caddy_api_token }}
+    }
+
+{% for endpoint in caddy_endpoints %}
+    @{{ endpoint.subdomain }} host {{ endpoint.subdomain }}.{{ caddy_domain }}
+    handle @{{ endpoint.subdomain }} {
+{% if endpoint.tls_insecure | default(false) %}
+        reverse_proxy {{ endpoint.upstream }} {
+            transport http {
+                tls_insecure_skip_verify
+            }
+        }
+{% else %}
+        reverse_proxy {{ endpoint.upstream }}
+{% endif %}
+    }
+
+{% endfor %}
+    handle {
+        respond "Not found" 404
+    }
+}

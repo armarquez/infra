@@ -1,0 +1,25 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: tailscale-test
+    image: geerlingguy/docker-debian12-ansible:latest
+    pre_build_image: true
+    privileged: true
+    cgroupns_mode: host
+    capabilities:
+      - NET_ADMIN
+      - SYS_MODULE
+    tmpfs:
+      - /run
+      - /tmp
+    command: "sleep infinity"
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      remote_tmp: /tmp
+verifier:
+  name: ansible

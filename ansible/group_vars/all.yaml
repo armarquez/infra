@@ -16,7 +16,7 @@ users:
     groups: ['sudo','systemd-journal']
     uid: 1001
     shell: "/bin/zsh"
-    ssh_key: 
+    ssh_key:
     - "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
     - "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
 groups_to_create:

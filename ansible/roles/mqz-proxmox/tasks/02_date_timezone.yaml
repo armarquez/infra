@@ -11,12 +11,14 @@
     executable: /bin/bash
   register: ntp_offset_result
   changed_when: false
+  when: configure_ntp | default(true)
 
 - name: Remove existing pool lines from chrony config
   ansible.builtin.lineinfile:
     path: /etc/chrony/chrony.conf
     regexp: '^pool'
     state: absent
+  when: configure_ntp | default(true)
 
 - name: Configure NTP pool servers
   ansible.builtin.template:
@@ -27,6 +29,8 @@
     mode: '0644'
   register: configure_ntp_servers_result
   notify: Restart chrony
+  when: configure_ntp | default(true)
 
 - name: Force synchronize time using chrony
   ansible.builtin.command: bash -c "chronyc -a makestep && sleep 10"
+  when: configure_ntp | default(true)

@@ -9,6 +9,7 @@
     - /etc/apt/sources.list.d/ceph.list
 
 - name: Configure APT repositories
+  when: configure_apt_repos | default(true)
   block:
     - name: Add Proxmox and Debian repositories
       ansible.builtin.template:
@@ -48,18 +49,21 @@
         path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
         regexp: '^(.*)Ext\.Msg\.show\(\{(.*)$\n^(.*)No valid subscription(.*)$'
         replace: '\1void({\2\n\3No valid subscription\4'
+      when: disable_subscription_nag | default(true)
 
 - name: Disable proxmox subscription popup
   ansible.builtin.replace:
     path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
     regexp: '^(.*)Ext\.Msg\.show\(\{(.*)$\n^(.*)No valid subscription(.*)$'
     replace: '\1void({\2\n\3No valid subscription\4'
+  when: disable_subscription_nag | default(true)
 
 - name: Disable subscription nag
   ansible.builtin.copy:
     src: no-nag-script
     dest: /etc/apt/apt.conf.d/no-nag-script
     mode: '0644'
+  when: disable_subscription_nag | default(true)
 
 - name: Clean APT cache if repositories were updated
   when: >

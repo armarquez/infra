@@ -62,7 +62,17 @@ info-bootstrap:
   @echo "Next steps:"
   @echo "  1. Restart your shell (or source ~/.bashrc / ~/.zshrc)"
   @echo "  2. Run 'direnv allow' in the project directory"
+  @echo "  3. Run 'just ansible install' to set up the Python venv"
+  @echo "  4. Run 'just install-hooks' to install git pre-commit hooks"
   @echo ""
+
+# Install git pre-commit hooks into .git/hooks/ (run once after cloning; requires: just ansible install)
+install-hooks:
+  direnv exec ./ansible pre-commit install
+
+# Run pre-commit checks against all files (useful after updating hooks)
+lint-all:
+  direnv exec ./ansible pre-commit run --all-files
 
 # Routing
 ansible *ARGS:

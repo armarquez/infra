@@ -1,0 +1,33 @@
+---
+# Configures Intel iGPU passthrough for an LXC container.
+# Must run against the Proxmox HOST (phoenix), not the LXC itself.
+# Modifies /etc/pve/lxc/<ctid>.conf to grant the container access to /dev/dri.
+
+- name: Get video group GID from host
+  ansible.builtin.command: getent group video
+  register: _video_group
+  changed_when: false
+  failed_when: false
+
+- name: Get render group GID from host
+  ansible.builtin.command: getent group render
+  register: _render_group
+  changed_when: false
+  failed_when: false
+
+- name: Set iGPU passthrough config entries
+  ansible.builtin.set_fact:
+    _igpu_config_lines:
+      - "lxc.cgroup2.devices.allow: c 226:0 rwm"
+      - "lxc.cgroup2.devices.allow: c 226:128 rwm"
+      - "lxc.mount.entry: /dev/dri/card0 dev/dri/card0 none bind,optional,create=file"
+      - "lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file"
+
+- name: Apply iGPU config lines to LXC container config
+  ansible.builtin.lineinfile:
+    path: "/etc/pve/lxc/{{ plex_lxc_ctid }}.conf"
+    line: "{{ item }}"
+    state: present
+    create: false
+  loop: "{{ _igpu_config_lines }}"
+  notify: Restart Plex LXC

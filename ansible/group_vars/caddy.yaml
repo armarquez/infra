@@ -1,0 +1,19 @@
+---
+# mqz-caddy role variables for the caddy LXC host
+# cloudflare_caddy_api_token comes from secrets.yaml
+
+caddy_domain: "mqz.casa"
+
+caddy_endpoints:
+  - name: Plex Media Server
+    subdomain: plex
+    upstream: "http://192.168.1.240:32400"
+
+  - name: Home Assistant
+    subdomain: ha
+    upstream: "http://192.168.1.240:8123"
+
+  - name: Proxmox
+    subdomain: phoenix
+    upstream: "https://192.168.1.240:8006"
+    tls_insecure: true # Proxmox uses self-signed cert

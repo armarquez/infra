@@ -1,0 +1,22 @@
+---
+caddy_version: "2.9.1"
+caddy_binary_path: "/usr/local/bin/caddy"
+caddy_config_dir: "/etc/caddy"
+caddy_data_dir: "/var/lib/caddy"
+caddy_log_dir: "/var/log/caddy"
+caddy_user: "caddy"
+caddy_group: "caddy"
+
+# Cloudflare DNS plugin token for ACME DNS-01 challenge
+# Set in secrets.yaml: cloudflare_caddy_api_token
+cloudflare_caddy_api_token: ""
+
+# Domain for wildcard TLS cert
+caddy_domain: "mqz.casa"
+
+# List of services to proxy. Each entry:
+#   - name: friendly label
+#     subdomain: e.g. "plex"
+#     upstream: e.g. "http://192.168.1.240:32400"
+#     tls_insecure: false  # set true for backends with self-signed certs
+caddy_endpoints: []

@@ -10,6 +10,10 @@ terraform {
       source  = "tailscale/tailscale"
       version = "~> 0.17"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 }
 
@@ -24,8 +28,6 @@ provider "tailscale" {
   oauth_client_secret = var.tailscale_oauth_client_secret
 }
 
-# Resources go here — e.g.:
-# module "containers" {
-#   source = "../../modules/lxc"
-#   ...
-# }
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}

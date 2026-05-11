@@ -1,0 +1,12 @@
+---
+# mqz-plex role variables for the plex LXC host
+
+plex_nfs_server: "192.168.1.250"      # cerebro (Synology NAS)
+plex_nfs_media_export: "/volume1/media"
+plex_nfs_mount_path: "/mnt/media"
+plex_appdata_path: "/opt/appdata/plex"
+plex_advertise_ip: "http://192.168.1.240:32400"
+plex_lxc_ctid: 200
+plex_igpu_passthrough: true
+
+# plex_claim_token and plex_uid/gid come from secrets.yaml or all.yaml
