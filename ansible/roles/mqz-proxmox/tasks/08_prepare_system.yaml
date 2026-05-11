@@ -98,6 +98,7 @@
 - name: Generate selected locales
   ansible.builtin.command: locale-gen
   changed_when: false
+  when: add_locales | default(false)
 
 - name: Configure /etc/default/locale
   ansible.builtin.copy:
@@ -106,10 +107,12 @@
       LANG={{ default_locale }}
       LC_ALL={{ default_locale }}
     mode: '0644'
+  when: add_locales | default(false)
 
 - name: Reconfigure locales
   ansible.builtin.command: dpkg-reconfigure -f noninteractive locales
   changed_when: false
+  when: add_locales | default(false)
 
 - name: Disable AppArmor service
   ansible.builtin.systemd:

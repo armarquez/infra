@@ -15,6 +15,9 @@
     plex_transcode_size: "1g"
     # Disable passthrough tasks — not applicable in containers
     plex_igpu_passthrough: false
+    # Disable Docker and NFS tasks — can't run DinD or mount NFS in molecule
+    plex_manage_docker: false
+    plex_manage_nfs: false
   pre_tasks:
     # NFS won't work in Docker — create a local bind mount for testing
     - name: Create fake media directory for testing

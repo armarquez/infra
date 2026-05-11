@@ -25,8 +25,10 @@
     install_specific_kernel: false
     pin_kernel_enabled: false
     clean_old_kernels: false
-    # Boot / network
-    global_boot_mode: "efi-grub"
+    # Boot / network — use 'efi' to skip GRUB handler (update-grub not in container)
+    global_boot_mode: "efi"
+    default_kernel_params: ""
+    additional_locales: []
     disable_ipv6: false
     configure_network: false
     dns_servers:
@@ -45,6 +47,7 @@
     default_locale: "en_US.UTF-8"
     configure_bash: true
     bash_history_size: 3000
+    custom_bash_prompt: "\\u@\\h:\\w\\$ "
     # Services (disable all hardware-dependent ones)
     apparmor_disable: false
     fail2ban_enable: false
@@ -61,6 +64,24 @@
     nested_virtualization_enable: false
     disable_ksmtuned: true
     change_smt: false
+    # NTP: chronyc not installed in container
+    configure_ntp: false
+    # proxmox-widget-toolkit not installed in container
+    disable_subscription_nag: false
+    # PVE repos conflict with container's existing Debian sources
+    configure_apt_repos: false
+    # PVE-only packages (proxmox-secure-boot-support, microcode) unavailable without PVE repo
+    install_pve_packages: false
+    # sshd not installed in container
+    configure_ssh: false
+    # pveum not available without Proxmox
+    configure_proxmox_acl: false
+    # zpool/zfs not installed in container
+    configure_zfs: false
+    # /etc/pve/ doesn't exist without Proxmox
+    configure_proxmox_core: false
+    # ksmtuned service requires systemd
+    configure_ksmtuned: false
     # Proxmox-specific
     max_workers: 10
     download_windows_guest_tools: false

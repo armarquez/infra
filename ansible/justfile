@@ -126,19 +126,31 @@ lint:
 
 # Run full molecule test suite for a role (create → converge → verify → destroy)
 molecule-test ROLE="mqz-proxmox":
-  cd roles/{{ROLE}} && molecule test
+  cd roles/{{ROLE}} && \
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS=true \
+    ANSIBLE_ROLES_PATH="{{justfile_directory()}}/galaxy_roles:{{justfile_directory()}}/roles" \
+    molecule test
 
 # Converge only — applies role without destroying container (fast iteration)
 molecule-converge ROLE="mqz-proxmox":
-  cd roles/{{ROLE}} && molecule converge
+  cd roles/{{ROLE}} && \
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS=true \
+    ANSIBLE_ROLES_PATH="{{justfile_directory()}}/galaxy_roles:{{justfile_directory()}}/roles" \
+    molecule converge
 
 # Re-run verify against existing container
 molecule-verify ROLE="mqz-proxmox":
-  cd roles/{{ROLE}} && molecule verify
+  cd roles/{{ROLE}} && \
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS=true \
+    ANSIBLE_ROLES_PATH="{{justfile_directory()}}/galaxy_roles:{{justfile_directory()}}/roles" \
+    molecule verify
 
 # Destroy molecule test container
 molecule-destroy ROLE="mqz-proxmox":
-  cd roles/{{ROLE}} && molecule destroy
+  cd roles/{{ROLE}} && \
+    ANSIBLE_ALLOW_BROKEN_CONDITIONALS=true \
+    ANSIBLE_ROLES_PATH="{{justfile_directory()}}/galaxy_roles:{{justfile_directory()}}/roles" \
+    molecule destroy
 
 ##########
 ## Repo utilities

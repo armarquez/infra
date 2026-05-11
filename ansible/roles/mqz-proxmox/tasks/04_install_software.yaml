@@ -5,9 +5,9 @@
       {{
         (['cpufrequtils', 'fio', 'unattended-upgrades', 'locales', 'sudo', 'lockfile-progs']) +
         (['ipmitool'] if ansible_facts.virtualization_role != 'guest' else []) +
-        (['proxmox-secure-boot-support'] if (proxmox_pve_major | int) >= 8 else []) +
-        (['intel-microcode'] if 'GenuineIntel' in global_cpu_vendor and (proxmox_pve_major | int) >= 8 else []) +
-        (['amd64-microcode'] if 'AuthenticAMD' in global_cpu_vendor and (proxmox_pve_major | int) >= 8 else []) +
+        (['proxmox-secure-boot-support'] if install_pve_packages | default(true) and (proxmox_pve_major | int) >= 8 else []) +
+        (['intel-microcode'] if install_pve_packages | default(true) and 'GenuineIntel' in global_cpu_vendor and (proxmox_pve_major | int) >= 8 else []) +
+        (['amd64-microcode'] if install_pve_packages | default(true) and 'AuthenticAMD' in global_cpu_vendor and (proxmox_pve_major | int) >= 8 else []) +
         (['sysbench', 'stress-ng'] if install_stresstest_software | default(false) else []) +
         (['nginx'] if nginx_enable | default(false) else []) +
         (['fail2ban'] if fail2ban_enable | default(false) else []) +

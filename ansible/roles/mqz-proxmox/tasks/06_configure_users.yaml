@@ -23,6 +23,7 @@
 - name: Hash password
   ansible.builtin.set_fact:
     hashed_password: "{{ system_user_password | password_hash('bcrypt') }}"
+  when: enable_system_user_password | default(false)
 
 - name: Set password for the user
   ansible.builtin.user:
@@ -44,6 +45,7 @@
     regexp: '^AuthorizedKeysFile'
     line: 'AuthorizedKeysFile .ssh/authorized_keys'
     state: present
+  when: configure_ssh | default(true)
 
 - name: Add all public keys from the specified folder
   ansible.posix.authorized_key:
@@ -58,21 +60,27 @@
   ansible.builtin.command: pveum user list
   register: pveum_users
   changed_when: false
+  when: configure_proxmox_acl | default(true)
 
 - name: Create Proxmox user
   ansible.builtin.command: >
     pveum useradd {{ system_user }}@pam -comment "Web interface user"
-  when: system_user ~ '@pam' not in pveum_users.stdout
+  when:
+    - configure_proxmox_acl | default(true)
+    - system_user ~ '@pam' not in pveum_users.stdout
   changed_when: system_user ~ '@pam' not in pveum_users.stdout
 
 - name: Check if Proxmox user has PVEAdmin role
   ansible.builtin.command: pveum acl list
   register: pveum_roles
   changed_when: false
+  when: configure_proxmox_acl | default(true)
 
 - name: Assign PVEAdmin role to the user
   ansible.builtin.command: >
     pveum aclmod / -user {{ system_user }}@pam -role PVEAdmin
-  when: system_user ~ '@pam' not in pveum_roles.stdout or 'PVEAdmin' not in pveum_roles.stdout
+  when:
+    - configure_proxmox_acl | default(true)
+    - system_user ~ '@pam' not in pveum_roles.stdout or 'PVEAdmin' not in pveum_roles.stdout
   changed_when: >
     system_user ~ '@pam' not in pveum_roles.stdout or 'PVEAdmin' not in pveum_roles.stdout

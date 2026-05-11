@@ -4,8 +4,10 @@
     name: caddy
     state: restarted
     daemon_reload: true
+  when: caddy_manage_service | default(true)
 
 - name: Reload Caddy
   ansible.builtin.systemd:
     name: caddy
     state: reloaded
+  when: caddy_manage_service | default(true)

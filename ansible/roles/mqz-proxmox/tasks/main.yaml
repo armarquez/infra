@@ -29,21 +29,26 @@
 
 - name: Configure network
   ansible.builtin.include_tasks: 09_configure_network.yaml
+  when: configure_network | default(true)
 
 - name: Configure ZFS
   ansible.builtin.include_tasks: 10_configure_zfs.yaml
+  when: configure_zfs | default(true)
 
 - name: Configure Proxmox
   ansible.builtin.include_tasks: 11_configure_proxmox.yaml
+  when: configure_proxmox_core | default(true)
 
 - name: PCIE Passthrough
   ansible.builtin.include_tasks: 12_pcie_passthrough.yaml
 
 - name: Configure Kernel Samepage Merging (KSM)
   ansible.builtin.include_tasks: 13_ksmtuned.yaml
+  when: configure_ksmtuned | default(true)
 
 - name: Create RAM Disk
   ansible.builtin.include_tasks: 14_create_ramdisk.yaml
+  when: create_ramfs | default(false)
 
 - name: CPU Performance
   ansible.builtin.include_tasks: 15_cpu_performance.yaml
@@ -59,6 +64,7 @@
 
 - name: Nested virtualization
   ansible.builtin.include_tasks: 19_nested_virtualization.yaml
+  when: nested_virtualization_enable | default(false)
 
 - name: Nginx
   ansible.builtin.include_tasks: 20_nginx.yaml

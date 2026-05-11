@@ -1,9 +1,14 @@
 ---
-- name: Add Docker apt signing key
+- name: Download Docker apt signing key (armored)
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/debian/gpg
-    dest: /usr/share/keyrings/docker-archive-keyring.gpg
+    dest: /tmp/docker-archive-keyring.gpg.asc
     mode: "0644"
+
+- name: Dearmor Docker apt signing key
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /tmp/docker-archive-keyring.gpg.asc
+    creates: /usr/share/keyrings/docker-archive-keyring.gpg
 
 - name: Add Docker apt repository
   ansible.builtin.apt_repository:
@@ -26,3 +31,4 @@
     name: docker
     state: started
     enabled: true
+  when: plex_manage_service | default(true)

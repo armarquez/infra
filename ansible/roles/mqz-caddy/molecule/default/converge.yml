@@ -12,5 +12,7 @@
       - name: Home Assistant
         subdomain: ha
         upstream: "http://127.0.0.1:8123"
+    # systemd not available in molecule containers
+    caddy_manage_service: false
   roles:
     - role: mqz-caddy

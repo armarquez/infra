@@ -1,5 +1,6 @@
 ---
 - name: Configure SSH settings
+  when: configure_ssh | default(true)
   notify:
     - Restart ssh
   block:

@@ -22,6 +22,7 @@
     name: tailscaled
     state: started
     enabled: true
+  when: tailscale_manage_service | default(true)
 
 - name: Build tailscale up arguments
   ansible.builtin.set_fact:
@@ -30,12 +31,14 @@
       {% if tailscale_advertise_routes | length > 0 %}--advertise-routes={{ tailscale_advertise_routes | join(',') }}{% endif %}
       {% if tailscale_accept_routes %}--accept-routes{% endif %}
       {% if tailscale_exit_node %}--advertise-exit-node{% endif %}
+  when: tailscale_manage_service | default(true)
 
 - name: Connect to Tailscale network
   ansible.builtin.command: "tailscale up {{ _tailscale_up_args }}"
   register: _tailscale_up
   changed_when: "'already running' not in _tailscale_up.stderr"
   no_log: true # prevent authkey from appearing in logs
+  when: tailscale_manage_service | default(true)
 
 - name: Enable IP forwarding for subnet routing
   ansible.posix.sysctl:
@@ -47,4 +50,6 @@
   loop:
     - net.ipv4.ip_forward
     - net.ipv6.conf.all.forwarding
-  when: tailscale_advertise_routes | length > 0
+  when:
+    - tailscale_manage_service | default(true)
+    - tailscale_advertise_routes | length > 0

@@ -8,5 +8,7 @@
     tailscale_advertise_routes:
       - "192.168.1.0/24"
     tailscale_accept_routes: true
+    # systemd not available in molecule containers — skip daemon start and network join
+    tailscale_manage_service: false
   roles:
     - role: mqz-tailscale

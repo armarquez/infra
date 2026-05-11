@@ -36,6 +36,7 @@
     path: "{{ caddy_binary_path }}"
     capability: cap_net_bind_service+eip
     state: present
+  changed_when: false
 
 - name: Deploy Caddyfile from template
   ansible.builtin.template:
@@ -60,3 +61,4 @@
     state: started
     enabled: true
     daemon_reload: true
+  when: caddy_manage_service | default(true)
