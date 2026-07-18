@@ -6,7 +6,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-ANSWER_FILE_TEMPLATE="$PROJECT_DIR/http/auto.toml.template"
 ANSWER_FILE="$PROJECT_DIR/http/auto.toml"
 
 # Get password from vault

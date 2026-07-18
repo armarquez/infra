@@ -32,6 +32,9 @@ jobs:
           ansible-galaxy role install -r requirements.yaml -p galaxy_roles
           ansible-galaxy collection install -r requirements.yaml
 
+      - name: Create dummy vault password file
+        run: mkdir -p ~/bin && echo "dummy" > ~/bin/op-vault
+
       - name: Run ansible-lint
         working-directory: ansible
         run: ansible-lint roles/
