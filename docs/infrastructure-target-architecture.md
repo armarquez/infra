@@ -33,7 +33,7 @@
 
 - **phoenix (192.168.1.240)** — Proxmox 9.x host. Running: Home Assistant OS (VM 100), Plex (LXC 200), Caddy (LXC 201), Tailscale subnet router. Managed by `mqz-proxmox`, `mqz-plex`, `mqz-caddy`, `mqz-tailscale`.
 - **cerebro (192.168.1.250)** — Synology DS1821+ NAS. Running: Portainer, Channels DVR + eplustv + pluto, IPTV Boss, OliveTin + static-server, Calibre-Web-Automated, acme.sh. **All deployed via manual copy-paste into Portainer UI.** Compose fragments exist at `ansible/services/cerebro/**/compose.yaml` but Ansible does not apply them yet.
-- **dazzler (historical)** — original host name planned for what is now the Plex LXC (200) on phoenix. Stale references in `ansible/inventories/home-network/inventory-setup.yaml`; cleanup tracked in issue #19.
+- **dazzler (historical)** — original host name planned for what is now the Plex LXC (200) on phoenix. Stale references in `ansible/inventories/home-network/inventory-setup.yaml`; cleanup tracked in issue #18.
 
 ## Guiding Principles
 
@@ -133,6 +133,6 @@ Ordered so each phase leaves the system in a working state.
 3. **Rotate leaked `CRONITOR_API_KEY` + migrate cerebro secrets to vault** — issue #14 (blocks #15).
 4. **Migrate cerebro compose fragments to Ansible-native deploy** — issue #15.
 5. **Add Molecule scenario for cerebro role(s)** — issue #20.
-6. **Phoenix provisioning polish** — HAOS auto-import (issue #17), LXC template auto-download (issue #18), `mqz-phoenix` cleanup (issue #16).
-7. **Stale `dazzler` cleanup** — issue #19; low priority, do alongside any issue that touches the inventory files.
+6. **Phoenix provisioning polish** — HAOS auto-import (issue #17), LXC template auto-download (issue #19), `mqz-phoenix` cleanup (issue #16).
+7. **Stale `dazzler` cleanup** — issue #18; low priority, do alongside any issue that touches the inventory files.
 8. **Backup & replication design** — deferred to its own planning session.
