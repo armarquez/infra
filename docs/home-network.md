@@ -82,7 +82,7 @@ Four VLANs are configured in UniFi. Two are actively used; two were provisioned 
 | MilLANnium Falcon | 10 | 192.168.3.0/24 | 0 | Reserved — likely a **management VLAN** (UniFi devices + hypervisor management) or similar; original intent partly forgotten |
 | LANdo Calrissian | 30 | 192.168.4.0/24 | 0 | Reserved for future segmentation — specific role TBD |
 
-Guest access is handled by a UniFi Guest Network SSID (see below), not by its own VLAN entry.
+Guest access uses a dedicated SSID (see Wireless below) but is not currently on its own VLAN.
 
 - **L3 Network Isolation (ACL) is OFF** — VLANs today are labels, not enforcement. Any VLAN can reach any other. Segmentation is a future enforcement decision, not a current one.
 - **Device Isolation (ACL) is OFF** — no client-to-client isolation within a VLAN.
@@ -96,11 +96,11 @@ Three SSIDs, all broadcast from every AP, all WPA2 (dual-band 2.4 GHz + 5 GHz �
 
 | SSID | Attached network | Clients | Intent |
 |---|---|---|---|
-| It's A Trap | LAN Solo (VLAN 20) | ~39 | Main WiFi — phones, laptops, IoT (untrusted / internet-connected) |
-| HothSpot | Default (VLAN 1) | ~9 | UniFi auto-provisioned Guest Network (captive portal / guest isolation) |
-| The Force | Default (VLAN 1) | 0 | Standby / trusted — purpose TBD |
+| HothSpot | Default (VLAN 1) | ~9 | **Trusted WiFi** — owner's personal devices (small allowlist) |
+| It's A Trap | LAN Solo (VLAN 20) | ~39 | **Untrusted WiFi** — family devices, IoT, phones, laptops (anything not explicitly trusted) |
+| The Force | Default (VLAN 1) | 0 | **Guest WiFi** — currently no active guest clients |
 
-**Note on HothSpot placement** — it broadcasts on the Default (VLAN 1) network but should have UniFi's Guest Network flag set, which enforces client isolation and blocks LAN access independently of the underlying VLAN. Confirm the Guest flag is actually enabled; if not, guest clients can currently reach the trusted VLAN. Open question below.
+**Config concern: The Force is on the trusted VLAN.** Guest SSIDs should either be on their own VLAN, or the SSID must have UniFi's Guest Network flag enabled (which forces client isolation and blocks LAN access regardless of the underlying VLAN). Verify the Guest flag is set on The Force; otherwise a guest connecting would land on the trusted VLAN. Open question below.
 
 - **Coverage** — 4× U7 Pro (Wi-Fi 7) inside the home + 1× UAP-AC-LR (Wi-Fi 5) in the garage.
 - **6 GHz radio unused** — U7 Pro APs support Wi-Fi 7 6 GHz but no SSID targets that band today.
@@ -138,7 +138,8 @@ Tracked as follow-up issue #22. The three viable paths:
 
 - **VLAN 10 (MilLANnium Falcon) and VLAN 30 (LANdo Calrissian) purpose** — provisioned but empty. VLAN 10 is likely a management VLAN (UniFi devices + hypervisor management); VLAN 30 role is unremembered. Decide before importing into IaC so imports capture intent, not just current empty state. Also decide whether a real management VLAN should be enforced (would require moving phoenix/cerebro management interfaces off VLAN 1).
 - **L3 isolation policy** — L3 Network Isolation and Device Isolation are off. Segmentation without enforcement is decorative. If any VLAN should actually be restricted (guest → internet only, IoT → Home Assistant only, etc.), that becomes a firewall-rule design task.
-- **`HothSpot` vs `The Force` SSIDs on the Default VLAN** — HothSpot has 9 clients; The Force has 0. Both are on VLAN 1. Consolidate, or move HothSpot to its own VLAN so guest traffic doesn't share the management LAN?
+- **Guest SSID (The Force) is on the trusted VLAN** — VLAN 1 (Default) is trusted, but The Force is intended as the guest network. Confirm UniFi's Guest Network flag is enabled on the SSID (which enforces isolation regardless of VLAN), or move The Force to its own guest VLAN with L3 isolation. Without one of those, a connected guest would land on the trusted LAN.
+- **Trusted vs untrusted WiFi split** — HothSpot (trusted, 9 clients) rides on VLAN 1; It's A Trap (untrusted, 39 clients) rides on VLAN 20. Both include phones/laptops that could plausibly belong to either category — the trust-boundary decision (which devices go where) is worth codifying.
 - **Where do phoenix (.240) and cerebro (.250) plug in?** Not visible in the UniFi device list — likely USW Pro Max 24 or one of the Flex switches. Capture the switch + port when time permits so cable troubleshooting has a map.
 - **Bonus Room U7 Pro link speed** — negotiating at 100 Mbps (Fast Ethernet). Likely bad cable or damaged port. Worth a physical inspection.
 - **Wi-Fi 7 6 GHz band unused** — U7 Pros support it; no SSID broadcasts on 6 GHz today. Add a 6 GHz-only SSID for modern clients?
