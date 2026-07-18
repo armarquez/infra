@@ -73,14 +73,16 @@ flowchart TD
 
 ## Networks / VLANs
 
-Four VLANs are configured in UniFi. Two are actively used; two are provisioned but empty.
+Four VLANs are configured in UniFi. Two are actively used; two were provisioned for future segmentation and are currently empty.
 
-| Name | VLAN ID | Subnet | Active clients | Purpose |
+| Name | VLAN ID | Subnet | Active clients | Intended purpose |
 |---|---|---|---|---|
-| Default | 1 | 192.168.1.0/24 | ~52 | Everything hardwired + management (UniFi devices, phoenix, cerebro) |
-| LAN Solo | 20 | 192.168.2.0/24 | ~44 | Wireless clients on the main WiFi SSID (see below) |
-| MilLANnium Falcon | 10 | 192.168.3.0/24 | 0 | Provisioned, unused — purpose TBD |
-| LANdo Calrissian | 30 | 192.168.4.0/24 | 0 | Provisioned, unused — purpose TBD |
+| Default | 1 | 192.168.1.0/24 | ~52 | **Trusted** — everything hardwired + UniFi management (phoenix, cerebro, UniFi devices, primary user machines) |
+| LAN Solo | 20 | 192.168.2.0/24 | ~44 | **Untrusted / internet-connected devices** — main WiFi SSID for phones/laptops/IoT |
+| MilLANnium Falcon | 10 | 192.168.3.0/24 | 0 | Reserved — likely a **management VLAN** (UniFi devices + hypervisor management) or similar; original intent partly forgotten |
+| LANdo Calrissian | 30 | 192.168.4.0/24 | 0 | Reserved for future segmentation — specific role TBD |
+
+Guest access is handled by a UniFi Guest Network SSID (see below), not by its own VLAN entry.
 
 - **L3 Network Isolation (ACL) is OFF** — VLANs today are labels, not enforcement. Any VLAN can reach any other. Segmentation is a future enforcement decision, not a current one.
 - **Device Isolation (ACL) is OFF** — no client-to-client isolation within a VLAN.
@@ -92,11 +94,13 @@ Four VLANs are configured in UniFi. Two are actively used; two are provisioned b
 
 Three SSIDs, all broadcast from every AP, all WPA2 (dual-band 2.4 GHz + 5 GHz — no 6 GHz SSID today).
 
-| SSID | Attached network | Clients | Likely intent |
+| SSID | Attached network | Clients | Intent |
 |---|---|---|---|
-| It's A Trap | LAN Solo (VLAN 20) | ~39 | Main personal WiFi |
-| HothSpot | Default (VLAN 1) | ~9 | Likely guest / hotspot per name |
-| The Force | Default (VLAN 1) | 0 | Legacy or standby — purpose TBD |
+| It's A Trap | LAN Solo (VLAN 20) | ~39 | Main WiFi — phones, laptops, IoT (untrusted / internet-connected) |
+| HothSpot | Default (VLAN 1) | ~9 | UniFi auto-provisioned Guest Network (captive portal / guest isolation) |
+| The Force | Default (VLAN 1) | 0 | Standby / trusted — purpose TBD |
+
+**Note on HothSpot placement** — it broadcasts on the Default (VLAN 1) network but should have UniFi's Guest Network flag set, which enforces client isolation and blocks LAN access independently of the underlying VLAN. Confirm the Guest flag is actually enabled; if not, guest clients can currently reach the trusted VLAN. Open question below.
 
 - **Coverage** — 4× U7 Pro (Wi-Fi 7) inside the home + 1× UAP-AC-LR (Wi-Fi 5) in the garage.
 - **6 GHz radio unused** — U7 Pro APs support Wi-Fi 7 6 GHz but no SSID targets that band today.
@@ -132,7 +136,7 @@ Tracked as follow-up issue #22. The three viable paths:
 
 ## Open Questions
 
-- **VLAN 10 (MilLANnium Falcon) and VLAN 30 (LANdo Calrissian) purpose** — provisioned but empty. Intended for IoT? Cameras? Guest? Decide before importing into IaC so imports capture intent, not just current empty state.
+- **VLAN 10 (MilLANnium Falcon) and VLAN 30 (LANdo Calrissian) purpose** — provisioned but empty. VLAN 10 is likely a management VLAN (UniFi devices + hypervisor management); VLAN 30 role is unremembered. Decide before importing into IaC so imports capture intent, not just current empty state. Also decide whether a real management VLAN should be enforced (would require moving phoenix/cerebro management interfaces off VLAN 1).
 - **L3 isolation policy** — L3 Network Isolation and Device Isolation are off. Segmentation without enforcement is decorative. If any VLAN should actually be restricted (guest → internet only, IoT → Home Assistant only, etc.), that becomes a firewall-rule design task.
 - **`HothSpot` vs `The Force` SSIDs on the Default VLAN** — HothSpot has 9 clients; The Force has 0. Both are on VLAN 1. Consolidate, or move HothSpot to its own VLAN so guest traffic doesn't share the management LAN?
 - **Where do phoenix (.240) and cerebro (.250) plug in?** Not visible in the UniFi device list — likely USW Pro Max 24 or one of the Flex switches. Capture the switch + port when time permits so cable troubleshooting has a map.
