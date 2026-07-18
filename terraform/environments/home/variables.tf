@@ -61,3 +61,17 @@ variable "proxmox_node" {
   type        = string
   default     = "phoenix"
 }
+
+# Home Assistant OS
+
+variable "haos_version" {
+  description = "Home Assistant OS release version — see https://github.com/home-assistant/operating-system/releases"
+  type        = string
+  default     = "18.1"
+}
+
+variable "haos_datastore_id" {
+  description = "Proxmox storage pool where the HAOS qcow2 image is uploaded (must support 'iso' content type)"
+  type        = string
+  default     = "local"
+}
