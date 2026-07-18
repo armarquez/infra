@@ -141,6 +141,11 @@ max_workers: 10 # Set the maximum number of workers for bulk operations in Proxm
 ## Download virtio drivers ISO for Windows
 download_windows_guest_tools: false # Download Windows VirtIO drivers ISO.
 
+## LXC template management (pveam)
+configure_pve_lxc_templates: true
+pve_lxc_templates:
+  - debian-12-standard_12.7-1_amd64.tar.zst
+
 ## ISO Management
 download_custom_images: false # Enable downloading custom ISO images.
 iso_file:

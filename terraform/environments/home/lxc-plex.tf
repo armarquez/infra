@@ -44,8 +44,8 @@ resource "proxmox_virtual_environment_container" "plex" {
   }
 
   operating_system {
-    # Debian 12 CT template — download via Proxmox UI or:
-    # pveam download local debian-12-standard_12.7-1_amd64.tar.zst
+    # Debian 12 CT template — auto-downloaded by mqz-proxmox
+    # (ansible/roles/mqz-proxmox/tasks/22_lxc_templates.yaml)
     template_file_id = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
     type             = "debian"
   }

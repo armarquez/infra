@@ -1,0 +1,10 @@
+---
+- name: Refresh Proxmox appliance template list
+  ansible.builtin.command: pveam update
+  changed_when: false
+
+- name: Download configured LXC templates to local storage
+  ansible.builtin.command:
+    cmd: "pveam download local {{ item }}"
+    creates: "/var/lib/vz/template/cache/{{ item }}"
+  loop: "{{ pve_lxc_templates | default([]) }}"
