@@ -43,7 +43,7 @@
 Listed in one place in the [target-architecture Open Questions section](./infrastructure-target-architecture.md#open-questions). The big three:
 
 - **Off-site backup.** Nothing leaves the LAN today.
-- **VLAN segmentation.** Currently one flat subnet. See [home-network.md → Open Questions](./home-network.md#open-questions).
+- **VLAN enforcement.** Four VLANs exist in UniFi but L3 isolation is off — segmentation is decorative today. See [home-network.md → Open Questions](./home-network.md#open-questions).
 - **What's the future of the `mqz-phoenix` role?** It exists but nothing uses it.
 
 ## The North Star

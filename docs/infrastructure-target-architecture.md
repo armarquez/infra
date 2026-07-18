@@ -118,7 +118,8 @@ flowchart LR
 ## Open Questions
 
 - **`mqz-phoenix` role fate** — exists but not wired into `run.yaml`, tasks mostly commented out. Delete or complete? Issue #16.
-- **VLAN strategy** — currently flat 192.168.1.0/24. IoT/management/trusted segmentation is a possibility, not a decision. See [home-network.md → Open Questions](./home-network.md#open-questions).
+- **VLAN enforcement strategy** — four VLANs are provisioned in UniFi (Default/LAN Solo actively used; MilLANnium Falcon/LANdo Calrissian empty) but L3 Network Isolation is off, so VLANs are labels rather than boundaries today. Enforcement policy + purpose of the two empty VLANs are open. See [home-network.md → Open Questions](./home-network.md#open-questions).
+- **UniFi as IaC** — network config (VLANs, SSIDs, firewall rules) is managed through the UniFi UI, not this repo. Tracked as issue #22.
 - **Off-site backup** — see Backup & Replication Policy above.
 - **SSO** — `docs/cerebro.md` mentions Authentik integration with Portainer as a TODO. Deferred.
 - **HAOS provisioning** — HAOS qcow2 currently imported manually. Issue #17.
