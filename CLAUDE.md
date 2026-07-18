@@ -6,12 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Home infrastructure repository using Infrastructure as Code for three physical machines:
+Home infrastructure repository using Infrastructure as Code for two physical machines:
 - `phoenix` — Proxmox hypervisor host (192.168.1.240)
-- `cerebro` — Synology NAS / primary services host (192.168.1.250)
-- `dazzler` — additional services, running as LXC on phoenix
+- `cerebro` — Synology NAS / storage-adjacent services host (192.168.1.250)
 
 **Tools**: Ansible (config management), Terraform (VM/LXC provisioning), Just (command runner), 1Password CLI + Ansible Vault (secrets), Molecule + Docker (Ansible testing), GitHub Actions (CI).
+
+**Architecture docs**: [docs/infrastructure-target-architecture.md](./docs/infrastructure-target-architecture.md) is the source of truth for service placement, guiding principles, decisions, and roadmap. This file (CLAUDE.md) covers day-to-day operational commands and workflows.
 
 ## Pre-commit Hooks
 
@@ -164,23 +165,15 @@ just incus snapshot-timestamp HOST  # Create timestamped checkpoint
 
 ## Architecture
 
-### Service Architecture on Phoenix
+### Service Architecture
 
-Phoenix (Proxmox host) runs the following infrastructure:
+Service placement, host responsibilities, and the storage flow live in [docs/infrastructure-target-architecture.md](./docs/infrastructure-target-architecture.md). Update that doc when placement changes; do not duplicate the content here.
 
-| Resource | Type | VM ID | Purpose |
-|---|---|---|---|
-| `home-assistant` | VM (HAOS) | 100 | Smart home automation — ha.mqz.casa |
-| `plex` | LXC | 200 | Plex Media Server with Intel QuickSync — plex.mqz.casa |
-| `caddy` | LXC | 201 | Reverse proxy + TLS for *.mqz.casa |
+Implementation notes worth keeping close to operational commands:
 
-**Intel iGPU passthrough for Plex**: The `mqz-plex` role configures `/etc/pve/lxc/200.conf` on the Proxmox host to pass `/dev/dri/card0` and `/dev/dri/renderD128` into the LXC. Plex uses Intel QuickSync for 4K hardware transcoding. The `i915` driver stays loaded on the host — no blacklisting needed for LXC passthrough.
-
-**Caddy + Cloudflare DNS-01**: Caddy runs in the caddy LXC and holds a wildcard TLS cert for `*.mqz.casa`, obtained via Cloudflare DNS-01 challenge (no ports need to be exposed to the internet). All internal services are proxied through Caddy. Public DNS A records (`plex.mqz.casa`, `ha.mqz.casa`, `phoenix.mqz.casa`) point to `192.168.1.240` — Cloudflare proxying is disabled so LAN traffic routes directly.
-
-**Tailscale subnet router**: Tailscale runs on the phoenix host and advertises `192.168.1.0/24`, giving remote access to all LAN services via the same DNS names without additional port-forwarding.
-
-**Media storage**: Plex mounts media from cerebro (Synology NAS at `192.168.1.250`) via NFS read-only at `/mnt/media`.
+- **Intel iGPU passthrough for Plex** — `mqz-plex` configures `/etc/pve/lxc/200.conf` on the Proxmox host to pass `/dev/dri/card0` and `/dev/dri/renderD128` into the LXC. Plex uses Intel QuickSync for 4K hardware transcoding. The `i915` driver stays loaded on the host — no blacklisting needed for LXC passthrough.
+- **Caddy DNS-01 challenge** — the wildcard cert acquisition needs `cloudflare_caddy_api_token` in vault with `Zone:DNS:Edit` on `mqz.casa`.
+- **Plex NFS mount** — `/mnt/media` mounts from cerebro (`192.168.1.250`) read-only.
 
 ### Ansible Testing Methodology
 
