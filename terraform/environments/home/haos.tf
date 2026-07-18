@@ -1,9 +1,27 @@
 # Home Assistant OS VM
 # HAOS is the officially supported HA deployment path — handles its own supervisor + add-ons.
-# Requires UEFI boot. Download the HAOS QCOW2 from:
-#   https://github.com/home-assistant/operating-system/releases
-# and import it to Proxmox before applying:
-#   qm importdisk 100 haos_ova-*.qcow2 local-lvm
+# Requires UEFI boot.
+#
+# Image handling:
+#   - `proxmox_virtual_environment_download_file.haos_qcow2` below fetches the
+#     compressed qcow2.xz from GitHub and decompresses it into ISO storage on
+#     phoenix. Idempotent (overwrite = false).
+#   - For an initial VM 100 provision, add `file_id = proxmox_virtual_environment_download_file.haos_qcow2.id`
+#     to the `disk` block below AND `import_from = "..."` so the qcow2 becomes
+#     the boot disk on create. Left off deliberately here to avoid touching the
+#     already-running VM 100 (would show as drift). Wire up on a fresh install
+#     or with `lifecycle { ignore_changes = [disk] }` first.
+#   - Bump `haos_version` in variables.tf (or via TF_VAR_haos_version) to pull a
+#     newer HAOS release. Check https://github.com/home-assistant/operating-system/releases
+resource "proxmox_virtual_environment_download_file" "haos_qcow2" {
+  content_type            = "iso"
+  datastore_id            = var.haos_datastore_id
+  node_name               = var.proxmox_node
+  url                     = "https://github.com/home-assistant/operating-system/releases/download/${var.haos_version}/haos_ova-${var.haos_version}.qcow2.xz"
+  file_name               = "haos_ova-${var.haos_version}.qcow2"
+  decompression_algorithm = "xz"
+  overwrite               = false
+}
 
 resource "proxmox_virtual_environment_vm" "home_assistant" {
   name      = "home-assistant"
