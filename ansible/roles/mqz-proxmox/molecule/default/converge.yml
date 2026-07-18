@@ -82,6 +82,8 @@
     configure_proxmox_core: false
     # ksmtuned service requires systemd
     configure_ksmtuned: false
+    # pveam not available in a plain Debian container
+    configure_pve_lxc_templates: false
     # Proxmox-specific
     max_workers: 10
     download_windows_guest_tools: false
