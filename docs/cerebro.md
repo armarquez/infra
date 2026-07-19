@@ -55,7 +55,7 @@ Current fragment / service state:
 | `11-iptv-boss` | `iptv-boss-iptvboss-1` (Portainer Stack) | disabled | needs takeover task |
 | `12-olivetin-channels` | `olivetin`, `static-file-server` (Portainer) | disabled | broken `version: '3.9'` stanza + `${PORTAINER_TOKEN}` interpolation |
 | `20-codeserver` | *(none)* | disabled | empty stub |
-| `30-calibre` | `calibre-web-automated` (Portainer) | disabled | needs takeover task |
+| `30-calibre` | `calibre-web-automated` | **Enabled** — pre-Ansible container removed on first run, replaced by compose (bind-mount data preserved) | — |
 | *(no fragment yet)* | `the-collector` DSM Container Manager Project: nzbget, deluge, sonarr, radarr | **needs new fragment** | + `NZBGET_PASS` in vault |
 | *(no fragment yet)* | `channels-remote`, `adbtuner` (DSM Container Manager individual containers) | **needs new fragment** | — |
 

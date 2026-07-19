@@ -17,7 +17,6 @@ disabled_compose_files:
   - 11-iptv-boss            # ports 8001/5901/6901 collide
   - 12-olivetin-channels    # deprecated version stanza + PORTAINER_TOKEN interpolation broken
   - 20-codeserver           # empty stub
-  - 30-calibre              # container name calibre-web-automated collides
 
 # mqz-cerebro role vars
 #
