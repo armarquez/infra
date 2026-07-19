@@ -2,12 +2,12 @@ services:
   eplustv:
     image: tonywagner/eplustv
     environment:
-      PUID: "1028"
-      PGID: "100"
+      PUID: "{{ channels_dvr_puid | default('1028') }}"
+      PGID: "{{ channels_dvr_pgid | default('100') }}"
     ports:
       - 8093:8000
     volumes:
-      - /volume1/docker/eplustv:/app/config
+      - "{{ cerebro_docker_root }}/eplustv:/app/config"
   pluto-for-channels:
     image: jonmaddox/pluto-for-channels
     container_name: pluto-for-channels

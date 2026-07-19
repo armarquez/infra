@@ -2,9 +2,9 @@ services:
   iptvboss:
     image: ghcr.io/groenator/iptvboss-docker:latest
     environment:
-      PUID: "1028"
-      PGID: "100"
-      TZ: "US/Arizona"
+      PUID: "{{ iptv_boss_puid | default('1028') }}"
+      PGID: "{{ iptv_boss_pgid | default('100') }}"
+      TZ: "{{ cerebro_timezone }}"
       CRON_SCHEDULE: "0 0 * * *"
       XC_SERVER: "true" # Set to true to start the XC server on boot. By default the XCSERVER is set to false.
     ports:
@@ -12,4 +12,4 @@ services:
       - 5901:5901 # Used by the VNC Server to connect to the container using the VNC client.
       - 6901:6901 # Used by the VNC Server to connect to the container using a web browser.
     volumes:
-    - /volume1/docker/iptv-boss:/headless/IPTVBoss
+      - "{{ cerebro_docker_root }}/iptv-boss:/headless/IPTVBoss"
