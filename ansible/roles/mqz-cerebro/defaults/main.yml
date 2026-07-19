@@ -2,6 +2,12 @@
 # Host paths on Synology
 cerebro_docker_root: /volume1/docker
 
+# Docker CLI location. DSM's Container Manager installs the docker binary at
+# /usr/local/bin/docker, which is NOT in root's PATH under sudo, so the
+# community.docker.docker_compose_v2 module can't discover it automatically
+# when the play runs with become: true. Pass it explicitly.
+cerebro_docker_cli: /usr/local/bin/docker
+
 # Runtime user for containers (verify with `id` on the box before assuming)
 cerebro_puid: "1028"
 cerebro_pgid: "100"
