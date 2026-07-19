@@ -71,12 +71,18 @@
       # regex_replace + from_json trick sidesteps community.general.dict_kv,
       # which currently uses ansible-core internals slated for removal in
       # ansible-core 2.23/2.24 and triggers deprecation warnings on every run.
+      #
+      # Note: single-quoted YAML does NOT process backslash escapes, so `\1`
+      # (one backslash) is what regex_replace sees as the group-1 reference.
+      # `\\1` (as previously written) would put a literal backslash before
+      # the ID, producing invalid JSON like `{"deviceID": "\ST2ZEQ..."}` and
+      # crashing from_json with "Invalid \escape".
       devices: >-
         {{
           [{'deviceID': syncthing_local_device_id}] +
           (item.share_with | default([])
             | map('extract', syncthing_device_by_name)
-            | map('regex_replace', '(.+)', '{"deviceID": "\\1"}')
+            | map('regex_replace', '(.+)', '{"deviceID": "\1"}')
             | map('from_json')
             | list)
         }}

@@ -21,3 +21,7 @@ all:
           # 3.11 venv in krakoa's home that also has the `docker` SDK installed.
           # Bootstrap: docs/cerebro.md → "Ansible-managed services".
           ansible_python_interpreter: /volume1/homes/krakoa/.venvs/ansible/bin/python
+          # DSM's OpenSSH doesn't advertise sftp/scp subsystems out of the box,
+          # so `smart` transfer emits noisy warnings before falling back to
+          # piped. Force piped up front to keep runs clean.
+          ansible_ssh_transfer_method: piped
