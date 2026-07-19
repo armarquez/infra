@@ -33,6 +33,12 @@ cerebro_compose_hostname: cerebro
 # Where the merged compose file lands on the remote (Ansible SSH user's home)
 cerebro_compose_dir: "/home/{{ ansible_user }}"
 
+# Compose project name — takeover tasks compare existing-container project
+# labels against this to decide "is this container ours or something else".
+# Defaults to the basename of cerebro_compose_dir, matching what docker
+# compose would pick automatically. Set explicitly on the deploy task too.
+cerebro_compose_project_name: "{{ cerebro_compose_dir | basename }}"
+
 # Service dirs to create under cerebro_docker_root.
 # Each entry is a dict — path is relative to cerebro_docker_root; puid/pgid
 # are per-service so services with their own owner UID (calibre 1026,
