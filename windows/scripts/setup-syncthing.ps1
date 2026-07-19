@@ -124,10 +124,12 @@ if ($proc) {
 }
 
 # --- 5. Wait for GUI, print device ID ---------------------------------------
-Write-Host "[wait] GUI on http://localhost:8384 ..."
+# First-run Syncthing v2 spends 30-60s generating ECDSA keys before the GUI
+# responds. Longer wait than the previous 20s.
+Write-Host "[wait] GUI on http://localhost:8384 (up to 90s for first-run key generation) ..."
 $configPath = "$env:LOCALAPPDATA\Syncthing\config.xml"
 $deviceId = $null
-for ($i = 0; $i -lt 20; $i++) {
+for ($i = 0; $i -lt 90; $i++) {
     if (Test-Path $configPath) {
         try {
             $config = [xml](Get-Content $configPath -ErrorAction Stop)
@@ -146,6 +148,18 @@ for ($i = 0; $i -lt 20; $i++) {
         }
     }
     Start-Sleep -Seconds 1
+}
+
+# Fallback: if the REST API is still slow but the config was written,
+# read the local device ID (first `<device>` element) directly from the file.
+if (-not $deviceId -and (Test-Path $configPath)) {
+    try {
+        $config = [xml](Get-Content $configPath -ErrorAction Stop)
+        $localDevice = $config.configuration.device | Select-Object -First 1
+        if ($localDevice) { $deviceId = $localDevice.id }
+    } catch {
+        # give up — we'll fall through to the warning below
+    }
 }
 
 Write-Host ''
