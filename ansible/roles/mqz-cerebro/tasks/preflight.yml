@@ -5,19 +5,27 @@
   failed_when: cerebro_docker_info.host_info is not defined
   when: cerebro_manage_deploy | default(true)
 
-- name: Look up runtime UID/GID for ansible_user
-  ansible.builtin.getent:
-    database: passwd
-    key: "{{ ansible_user }}"
+# DSM (Synology) ships busybox and does not include `getent` in the
+# standard paths, so ansible.builtin.getent fails. `id -u`/`id -g` are
+# universally available and give us the same UID/GID.
+- name: Look up runtime UID for ansible_user
+  ansible.builtin.command: "id -u {{ ansible_user }}"
+  register: cerebro_uid_result
+  changed_when: false
+
+- name: Look up runtime GID for ansible_user
+  ansible.builtin.command: "id -g {{ ansible_user }}"
+  register: cerebro_gid_result
+  changed_when: false
 
 - name: Assert configured PUID/PGID matches ansible_user's runtime UID/GID
   ansible.builtin.assert:
     that:
-      - getent_passwd[ansible_user][1] == (cerebro_puid | string)
-      - getent_passwd[ansible_user][2] == (cerebro_pgid | string)
+      - cerebro_uid_result.stdout == (cerebro_puid | string)
+      - cerebro_gid_result.stdout == (cerebro_pgid | string)
     fail_msg: >-
       cerebro_puid/pgid ({{ cerebro_puid }}/{{ cerebro_pgid }}) does not match
       the runtime id of {{ ansible_user }}
-      ({{ getent_passwd[ansible_user][1] }}/{{ getent_passwd[ansible_user][2] }}).
+      ({{ cerebro_uid_result.stdout }}/{{ cerebro_gid_result.stdout }}).
       Update cerebro_puid/cerebro_pgid in group_vars/cerebro.yaml.
     success_msg: "PUID/PGID match runtime id for {{ ansible_user }}."
