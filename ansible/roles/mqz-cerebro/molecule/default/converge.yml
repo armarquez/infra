@@ -27,5 +27,7 @@
     cerebro_manage_calibre_takeover: false
     # No Channels DVR running in molecule → skip takeover check
     cerebro_manage_channels_dvr_takeover: false
+    # No IPTV Boss running in molecule → skip takeover check
+    cerebro_manage_iptv_boss_takeover: false
   roles:
     - role: mqz-cerebro

@@ -1,0 +1,28 @@
+---
+# Pre-deploy IPTV Boss takeover.
+#
+# Existing `iptv-boss-iptvboss-1` was deployed via Portainer Stack or DSM
+# Container Manager Project (project label "iptv-boss"). Our fragment
+# doesn't set container_name so compose would create "krakoa-iptvboss-1"
+# — no NAME conflict, but the existing container holds ports 8001/5901/6901
+# until removed.
+#
+# Bind mount at {{ cerebro_docker_root }}/iptv-boss is preserved (host path).
+
+- name: Look up existing "iptv-boss-iptvboss-1" container
+  community.docker.docker_container_info:
+    name: iptv-boss-iptvboss-1
+  register: cerebro_iptvboss_existing
+  failed_when: false
+  changed_when: false
+
+- name: Remove pre-Ansible iptv-boss-iptvboss-1 container (bind-mount data preserved)
+  community.docker.docker_container:
+    name: iptv-boss-iptvboss-1
+    state: absent
+  vars:
+    _labels: "{{ cerebro_iptvboss_existing.container.Config.Labels | default({}) }}"
+  when:
+    - cerebro_iptvboss_existing.container is not none
+    - cerebro_iptvboss_existing.container is defined
+    - _labels['com.docker.compose.project'] | default('') != cerebro_compose_project_name

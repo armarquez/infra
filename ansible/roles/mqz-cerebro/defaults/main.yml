@@ -27,6 +27,8 @@ cerebro_manage_portainer_takeover: true
 cerebro_manage_calibre_takeover: true
 # One-time takeover of pre-Ansible channels-dvr-eplustv-1 + pluto-for-channels containers (safe no-op after)
 cerebro_manage_channels_dvr_takeover: true
+# One-time takeover of pre-Ansible iptv-boss-iptvboss-1 container (safe no-op after)
+cerebro_manage_iptv_boss_takeover: true
 
 # Which hostname's fragments to merge. Defaults to `cerebro` so molecule
 # scenarios using different inventory hostnames still find the fragments.
