@@ -1,0 +1,30 @@
+---
+# Host paths on Synology
+cerebro_docker_root: /volume1/docker
+
+# Runtime user for containers (verify with `id` on the box before assuming)
+cerebro_puid: "1028"
+cerebro_pgid: "100"
+
+# Timezone (inherits repo-wide default from group_vars/all.yaml)
+cerebro_timezone: "{{ timezone }}"
+
+# Feature gates — flip off in molecule to bypass Synology-specific paths / docker
+cerebro_manage_dirs: true
+cerebro_manage_compose_merge: true
+cerebro_manage_deploy: true
+# Post-deploy service configuration (Syncthing REST API, etc.)
+cerebro_manage_service_config: true
+
+# Which hostname's fragments to merge. Defaults to `cerebro` so molecule
+# scenarios using different inventory hostnames still find the fragments.
+cerebro_compose_hostname: cerebro
+
+# Where the merged compose file lands on the remote (Ansible SSH user's home)
+cerebro_compose_dir: "/home/{{ ansible_user }}"
+
+# Service dirs to create under cerebro_docker_root, owned by cerebro_puid/pgid.
+# Each entry maps 1:1 to a compose fragment's bind-mount root.
+cerebro_service_dirs:
+  - syncthing/config
+  - syncthing/data

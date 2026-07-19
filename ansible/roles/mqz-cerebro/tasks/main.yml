@@ -1,0 +1,27 @@
+---
+- name: Preflight
+  ansible.builtin.include_tasks: preflight.yml
+
+- name: Bootstrap host dirs for services
+  ansible.builtin.include_tasks: bootstrap_dirs.yml
+  when: cerebro_manage_dirs | default(true)
+
+- name: Merge compose fragments
+  ansible.builtin.include_role:
+    name: ironicbadger.docker_compose_generator
+  vars:
+    docker_compose_generator_output_path: "{{ cerebro_compose_dir }}"
+    docker_compose_generator_uid: "{{ cerebro_puid }}"
+    docker_compose_generator_gid: "{{ cerebro_pgid }}"
+    docker_compose_hostname: "{{ cerebro_compose_hostname }}"
+  when: cerebro_manage_compose_merge | default(true)
+
+- name: Deploy merged compose stack
+  ansible.builtin.include_tasks: deploy.yml
+  when: cerebro_manage_deploy | default(true)
+
+- name: Configure Syncthing (post-deploy)
+  ansible.builtin.include_tasks: syncthing.yml
+  when:
+    - cerebro_manage_service_config | default(true)
+    - syncthing_folders is defined

@@ -25,9 +25,10 @@
   roles:
     - role: mqz-caddy
 
-# - hosts: cerebro
-#   vars_files:
-#     - 'group_vars/secrets.yaml'
-#   roles:
-#     - role: ironicbadger.docker_compose_generator
-#       tags: compose
+- hosts: cerebro
+  vars_files:
+    - 'group_vars/secrets.yaml'
+  gather_facts: false
+  roles:
+    - role: mqz-cerebro
+      tags: cerebro

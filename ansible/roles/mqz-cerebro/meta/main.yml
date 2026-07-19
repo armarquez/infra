@@ -1,0 +1,14 @@
+---
+dependencies: []
+
+galaxy_info:
+  role_name: mqz_cerebro
+  namespace: armarquez
+  author: Anthony Marquez
+  description: Deploy Docker services on cerebro (Synology NAS) via ironicbadger.docker_compose_generator
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm

@@ -50,6 +50,7 @@ jobs:
           - mqz-tailscale
           - mqz-plex
           - mqz-caddy
+          - mqz-cerebro
     steps:
       - uses: actions/checkout@v4
 
