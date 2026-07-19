@@ -1,0 +1,50 @@
+---
+# Pre-deploy Channels DVR takeover.
+#
+# Two containers to reclaim:
+#   - channels-dvr-eplustv-1  → currently occupies port 8093, deployed via
+#     a Portainer Stack or DSM Container Manager Project (project label
+#     "channels-dvr"). Our fragment doesn't set container_name so compose
+#     would create "krakoa-eplustv-1"; there's no NAME conflict but the
+#     existing container still holds port 8093.
+#   - pluto-for-channels      → our fragment sets container_name explicitly,
+#     so removing the existing one avoids a name conflict.
+#
+# Bind mount for eplustv at {{ cerebro_docker_root }}/eplustv is preserved
+# (host path, not Docker volume). pluto has no persistent state.
+
+- name: Look up existing "channels-dvr-eplustv-1" container
+  community.docker.docker_container_info:
+    name: channels-dvr-eplustv-1
+  register: cerebro_eplustv_existing
+  failed_when: false
+  changed_when: false
+
+- name: Remove pre-Ansible channels-dvr-eplustv-1 container (bind-mount data preserved)
+  community.docker.docker_container:
+    name: channels-dvr-eplustv-1
+    state: absent
+  vars:
+    _labels: "{{ cerebro_eplustv_existing.container.Config.Labels | default({}) }}"
+  when:
+    - cerebro_eplustv_existing.container is not none
+    - cerebro_eplustv_existing.container is defined
+    - _labels['com.docker.compose.project'] | default('') != cerebro_compose_project_name
+
+- name: Look up existing "pluto-for-channels" container
+  community.docker.docker_container_info:
+    name: pluto-for-channels
+  register: cerebro_pluto_existing
+  failed_when: false
+  changed_when: false
+
+- name: Remove pre-Ansible pluto-for-channels container
+  community.docker.docker_container:
+    name: pluto-for-channels
+    state: absent
+  vars:
+    _labels: "{{ cerebro_pluto_existing.container.Config.Labels | default({}) }}"
+  when:
+    - cerebro_pluto_existing.container is not none
+    - cerebro_pluto_existing.container is defined
+    - _labels['com.docker.compose.project'] | default('') != cerebro_compose_project_name

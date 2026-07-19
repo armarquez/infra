@@ -67,13 +67,17 @@
       path: "{{ item.path }}"
       type: "{{ item.type | default('sendreceive') }}"
       # Local device first; then each peer named in `share_with` resolved
-      # via the name→ID lookup and wrapped as {"deviceID": <id>}.
+      # via the name→ID lookup and wrapped as {"deviceID": <id>}. The
+      # regex_replace + from_json trick sidesteps community.general.dict_kv,
+      # which currently uses ansible-core internals slated for removal in
+      # ansible-core 2.23/2.24 and triggers deprecation warnings on every run.
       devices: >-
         {{
           [{'deviceID': syncthing_local_device_id}] +
           (item.share_with | default([])
             | map('extract', syncthing_device_by_name)
-            | map('community.general.dict_kv', 'deviceID')
+            | map('regex_replace', '(.+)', '{"deviceID": "\\1"}')
+            | map('from_json')
             | list)
         }}
     status_code: [200, 204]

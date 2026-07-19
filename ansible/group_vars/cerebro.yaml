@@ -13,7 +13,6 @@
 # `id krakoa` (1032) on cerebro.
 disabled_compose_files:
   - 00-acme-sh              # secrets not in vault; conflicts with running acme.sh
-  - 10-channels-dvr         # eplustv port 8093 + pluto container name collide
   - 11-iptv-boss            # ports 8001/5901/6901 collide
   - 12-olivetin-channels    # deprecated version stanza + PORTAINER_TOKEN interpolation broken
   - 20-codeserver           # empty stub

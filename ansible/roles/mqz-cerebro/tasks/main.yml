@@ -28,6 +28,12 @@
     - cerebro_manage_deploy | default(true)
     - cerebro_manage_calibre_takeover | default(true)
 
+- name: Channels DVR takeover (pre-deploy)
+  ansible.builtin.include_tasks: channels_dvr.yml
+  when:
+    - cerebro_manage_deploy | default(true)
+    - cerebro_manage_channels_dvr_takeover | default(true)
+
 - name: Deploy merged compose stack
   ansible.builtin.include_tasks: deploy.yml
   when: cerebro_manage_deploy | default(true)
