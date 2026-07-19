@@ -1,8 +1,23 @@
 ---
 # cerebro is a Synology DS1821+; ansible connects as the DSM admin user.
-# The Container Manager package (Synology's Docker) exposes the daemon socket
-# to the docker group. `krakoa` is a member of that group — no `become: true`
-# needed for docker operations.
+# DSM's docker socket at /var/run/docker.sock is root:root — no docker group
+# exists — so the cerebro play in run.yaml uses `become: true` and krakoa
+# has passwordless sudo (see /etc/sudoers.d/krakoa on-box).
+
+# Phased migration: only bring up services that don't collide with what's
+# already running under Portainer Stacks on cerebro. Add each existing
+# service to a per-service takeover task (see tasks/portainer.yml pattern),
+# then remove its dir name from this list to enable it.
+#
+# UIDs confirmed via `id boogey` (1026), `id the-collector` (1028),
+# `id krakoa` (1032) on cerebro.
+disabled_compose_files:
+  - 00-acme-sh              # secrets not in vault; conflicts with running acme.sh
+  - 10-channels-dvr         # eplustv port 8093 + pluto container name collide
+  - 11-iptv-boss            # ports 8001/5901/6901 collide
+  - 12-olivetin-channels    # deprecated version stanza + PORTAINER_TOKEN interpolation broken
+  - 20-codeserver           # empty stub
+  - 30-calibre              # container name calibre-web-automated collides
 
 # mqz-cerebro role vars
 #
