@@ -7,10 +7,10 @@
 # mqz-cerebro role vars
 #
 # UID/GID must match the runtime `id` of ansible_user on cerebro (verified by
-# the role's preflight). Override here if `id krakoa` on cerebro returns
-# different values than the defaults (1028/100).
-# cerebro_puid: "1028"
-# cerebro_pgid: "100"
+# the role's preflight). Confirmed via `id krakoa` on cerebro:
+#   uid=1032(krakoa) gid=100(users)
+cerebro_puid: "1032"
+cerebro_pgid: "100"
 
 # Timezone / docker root / dir list all inherit sensible defaults from
 # ansible/roles/mqz-cerebro/defaults/main.yml — override only if needed.
