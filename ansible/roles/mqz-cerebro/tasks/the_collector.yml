@@ -1,0 +1,37 @@
+---
+# Pre-deploy takeover for the-collector stack (nzbget/deluge/sonarr/radarr).
+#
+# Four containers deployed via DSM Container Manager Project named
+# "the-collector" (compose project label "the-collector"). Each sets
+# container_name explicitly in both the existing config AND our new
+# fragment, so we'd hit a name conflict on all four without takeover.
+#
+# Bind mounts at /volume1/docker/{nzbget,deluge,sonarr,radarr}/config
+# and /volume1/Media-Shared/{downloads,media} survive since they're host
+# bind mounts, not Docker volumes.
+
+- name: Look up existing the-collector containers
+  community.docker.docker_container_info:
+    name: "{{ item }}"
+  loop:
+    - nzbget
+    - deluge
+    - sonarr
+    - radarr
+  register: cerebro_the_collector_existing
+  failed_when: false
+  changed_when: false
+  loop_control:
+    label: "{{ item }}"
+
+- name: Remove pre-Ansible the-collector containers not owned by our project
+  community.docker.docker_container:
+    name: "{{ item.item }}"
+    state: absent
+  loop: "{{ cerebro_the_collector_existing.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when:
+    - item.container is not none
+    - item.container is defined
+    - (item.container.Config.Labels | default({}))['com.docker.compose.project'] | default('') != cerebro_compose_project_name

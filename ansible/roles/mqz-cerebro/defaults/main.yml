@@ -29,6 +29,8 @@ cerebro_manage_calibre_takeover: true
 cerebro_manage_channels_dvr_takeover: true
 # One-time takeover of pre-Ansible iptv-boss-iptvboss-1 container (safe no-op after)
 cerebro_manage_iptv_boss_takeover: true
+# One-time takeover of pre-Ansible the-collector containers (nzbget/deluge/sonarr/radarr; safe no-op after)
+cerebro_manage_the_collector_takeover: true
 
 # Which hostname's fragments to merge. Defaults to `cerebro` so molecule
 # scenarios using different inventory hostnames still find the fragments.
@@ -72,3 +74,15 @@ cerebro_service_dirs:
   - path: iptv-boss
     puid: "{{ iptv_boss_puid | default('1028') }}"
     pgid: "{{ iptv_boss_pgid | default('100') }}"
+  - path: nzbget/config
+    puid: "{{ the_collector_puid | default('1028') }}"
+    pgid: "{{ the_collector_pgid | default('100') }}"
+  - path: deluge/config
+    puid: "{{ the_collector_puid | default('1028') }}"
+    pgid: "{{ the_collector_pgid | default('100') }}"
+  - path: sonarr/config
+    puid: "{{ the_collector_puid | default('1028') }}"
+    pgid: "{{ the_collector_pgid | default('100') }}"
+  - path: radarr/config
+    puid: "{{ the_collector_puid | default('1028') }}"
+    pgid: "{{ the_collector_pgid | default('100') }}"
