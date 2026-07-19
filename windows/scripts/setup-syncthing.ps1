@@ -59,10 +59,14 @@ $candidates = @(
     "$env:ProgramFiles\Syncthing\syncthing.exe",
     "$env:ProgramFiles(x86)\Syncthing\syncthing.exe"
 )
-# WinGet Packages dir uses a versioned suffix; glob it.
-$pkgGlob = Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\$WingetId*\syncthing.exe" -ErrorAction SilentlyContinue |
-    Select-Object -ExpandProperty FullName -First 1
-if ($pkgGlob) { $candidates = $candidates + $pkgGlob }
+# WinGet Packages layout is `Packages/<id>_.../syncthing-windows-amd64-vX.Y.Z/syncthing.exe`
+# (nested two levels under Packages). Recurse with a depth cap to catch any layout.
+$pkgRoot = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages"
+if (Test-Path $pkgRoot) {
+    $pkgHit = Get-ChildItem -Path $pkgRoot -Recurse -Depth 5 -Filter 'syncthing.exe' -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty FullName
+    if ($pkgHit) { $candidates = $candidates + $pkgHit }
+}
 
 $SyncthingPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $SyncthingPath) {
