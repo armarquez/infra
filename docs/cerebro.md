@@ -52,7 +52,7 @@ Current fragment / service state:
 | `40-syncthing` | *(new — never ran)* | **Enabled** | — |
 | `00-acme-sh` | `acme.sh` (Portainer) | disabled | Cloudflare + certadmin secrets needed in vault |
 | `10-channels-dvr` | `channels-dvr-eplustv-1`, `pluto-for-channels` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose | — |
-| `11-iptv-boss` | `iptv-boss-iptvboss-1` (Portainer Stack) | disabled | needs takeover task |
+| `11-iptv-boss` | `iptv-boss-iptvboss-1` | **Enabled** — pre-Ansible container removed on first run, replaced by compose | — |
 | `12-olivetin-channels` | `olivetin`, `static-file-server` (Portainer) | disabled | broken `version: '3.9'` stanza + `${PORTAINER_TOKEN}` interpolation |
 | `20-codeserver` | *(none)* | disabled | empty stub |
 | `30-calibre` | `calibre-web-automated` | **Enabled** — pre-Ansible container removed on first run, replaced by compose (bind-mount data preserved) | — |
