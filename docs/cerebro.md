@@ -34,6 +34,33 @@ Run these once as `krakoa` via SSH before the first `just ansible run cerebro`. 
    ```
    `ansible/inventories/home-network/inventory.yaml` already points `ansible_python_interpreter` at the resulting venv.
 
+### Migration status
+
+Before Ansible touched cerebro, services ran via a mix of Portainer, DSM's built-in Container Manager (Projects + individual containers), and manual `docker run`. Migration is phased — each service moves under Ansible one at a time, with a per-service takeover task that removes the pre-Ansible container before compose brings up the identical stack. This preserves bind-mounted data.
+
+Owners of existing `/volume1/docker/<service>/` data (confirmed via `id`):
+
+- `krakoa` = 1032 (SSH user, Ansible connects as this)
+- `boogey` = 1026 (originally owned calibre, olivetin, acme-sh)
+- `the-collector` = 1028 (originally owned eplustv, iptv-boss, and the nzbget/deluge/sonarr/radarr "the-collector" stack)
+
+Current fragment / service state:
+
+| Fragment | Currently running as | Ansible status | Blocker |
+|---|---|---|---|
+| `00-portainer` | *(was killed by our earlier failed run)* | **Enabled** | — |
+| `40-syncthing` | *(new — never ran)* | **Enabled** | — |
+| `00-acme-sh` | `acme.sh` (Portainer) | disabled | Cloudflare + certadmin secrets needed in vault |
+| `10-channels-dvr` | `channels-dvr-eplustv-1`, `pluto-for-channels` (Portainer Stack) | disabled | needs takeover task |
+| `11-iptv-boss` | `iptv-boss-iptvboss-1` (Portainer Stack) | disabled | needs takeover task |
+| `12-olivetin-channels` | `olivetin`, `static-file-server` (Portainer) | disabled | broken `version: '3.9'` stanza + `${PORTAINER_TOKEN}` interpolation |
+| `20-codeserver` | *(none)* | disabled | empty stub |
+| `30-calibre` | `calibre-web-automated` (Portainer) | disabled | needs takeover task |
+| *(no fragment yet)* | `the-collector` DSM Container Manager Project: nzbget, deluge, sonarr, radarr | **needs new fragment** | + `NZBGET_PASS` in vault |
+| *(no fragment yet)* | `channels-remote`, `adbtuner` (DSM Container Manager individual containers) | **needs new fragment** | — |
+
+The `disabled_compose_files` list in `ansible/group_vars/cerebro.yaml` is the switch — remove an entry once the corresponding takeover is written.
+
 ### Troubleshooting
 
 The `just ansible troubleshoot` recipe is a shared entry point for ad-hoc diagnostics — it invokes whichever script is currently useful. Today it points at `scripts/troubleshoot-cerebro.sh`, a read-only dump of docker CLI availability under sudo, home dir resolution, existing containers + compose-project labels, `/volume1/docker/*` ownership, sudoers, and Python venv state. Output tees to `/tmp/cerebro-troubleshoot.log`. Paste that log when debugging a failed `just ansible run cerebro`.

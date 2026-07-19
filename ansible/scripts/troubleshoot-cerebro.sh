@@ -27,6 +27,11 @@ fi
 ssh -o BatchMode=yes "$TARGET_USER@$TARGET_HOST" 'bash -s' <<'REMOTE' 2>&1 | tee "$OUTPUT"
 set +e
 
+# DSM's Container Manager installs docker at /usr/local/bin/docker, which
+# is NOT in the PATH of a non-login shell (which is what `bash -s` gives us).
+# Use the full path throughout instead of relying on discovery.
+DOCKER=/usr/local/bin/docker
+
 echo "===== 0. RUN CONTEXT ====="
 echo "date:     $(date -Iseconds)"
 echo "hostname: $(hostname)"
@@ -35,14 +40,13 @@ grep -E '^(productversion|buildnumber|smallfixnumber)=' /etc/synoinfo.conf 2>/de
 
 echo
 echo "===== 1. TOOL AVAILABILITY (as ansible_user) ====="
-which docker
-docker --version 2>&1
-docker compose version 2>&1
+"$DOCKER" --version 2>&1
+"$DOCKER" compose version 2>&1
 ls -la /var/run/docker.sock
 
 echo
 echo "===== 2. AS ROOT (what ansible sees under become) ====="
-sudo -n bash -c 'echo "PATH=$PATH"; which docker; docker --version 2>&1; docker compose version 2>&1'
+sudo -n bash -c "echo PATH=\$PATH; $DOCKER --version 2>&1; $DOCKER compose version 2>&1"
 
 echo
 echo "===== 3. HOME DIR RESOLUTION ====="
@@ -54,13 +58,13 @@ ls -ld "/volume1/homes/$(whoami)" 2>&1
 
 echo
 echo "===== 4. CURRENT CONTAINERS ====="
-sudo -n docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' 2>&1
+sudo -n "$DOCKER" ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' 2>&1
 
 echo
 echo "===== 5. COMPOSE-PROJECT LABEL PER EXISTING CONTAINER ====="
-for name in portainer calibre-web-automated iptvboss eplustv pluto-for-channels olivetin static-file-server acme.sh syncthing; do
-  if sudo -n docker inspect "$name" >/dev/null 2>&1; then
-    label=$(sudo -n docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$name" 2>&1)
+for name in portainer calibre-web-automated iptvboss eplustv pluto-for-channels olivetin static-file-server acme.sh syncthing nzbget deluge sonarr radarr channels-remote adbtuner; do
+  if sudo -n "$DOCKER" inspect "$name" >/dev/null 2>&1; then
+    label=$(sudo -n "$DOCKER" inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$name" 2>&1)
     if [ -n "$label" ] && [ "$label" != "<no value>" ]; then
       printf '%-30s label = %s\n' "$name" "$label"
     else
@@ -73,17 +77,25 @@ done
 
 echo
 echo "===== 6. HOST DIR OWNERSHIP UNDER /volume1/docker/ ====="
-for dir in portainer calibre calibre/config calibre/library calibre/ingest eplustv iptv-boss syncthing syncthing/config syncthing/data olivetin olivetin/config acme-sh; do
+for dir in portainer calibre calibre/config calibre/library calibre/ingest eplustv iptv-boss syncthing syncthing/config syncthing/data olivetin olivetin/config acme-sh nzbget deluge sonarr radarr; do
   ls -ld "/volume1/docker/$dir" 2>&1
 done
 
 echo
+echo "===== 6b. KNOWN OWNER-USER UIDS ====="
+for user in krakoa boogey the-collector; do
+  id "$user" 2>&1
+done
+
+echo
 echo "===== 7. EXISTING MERGED COMPOSE FILE ====="
-ls -la ~/compose.yaml 2>&1
-if [ -f ~/compose.yaml ]; then
-  echo "--- first 30 lines ---"
-  head -30 ~/compose.yaml
-fi
+for path in ~/compose.yaml /home/krakoa/compose.yaml; do
+  ls -la "$path" 2>&1
+  if [ -f "$path" ]; then
+    echo "--- first 30 lines of $path ---"
+    head -30 "$path"
+  fi
+done
 
 echo
 echo "===== 8. SUDOERS CONFIG FOR ansible_user ====="
