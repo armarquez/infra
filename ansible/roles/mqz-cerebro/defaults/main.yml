@@ -15,6 +15,8 @@ cerebro_manage_compose_merge: true
 cerebro_manage_deploy: true
 # Post-deploy service configuration (Syncthing REST API, etc.)
 cerebro_manage_service_config: true
+# One-time takeover of manually-created Portainer container (safe no-op after)
+cerebro_manage_portainer_takeover: true
 
 # Which hostname's fragments to merge. Defaults to `cerebro` so molecule
 # scenarios using different inventory hostnames still find the fragments.
@@ -26,5 +28,6 @@ cerebro_compose_dir: "/home/{{ ansible_user }}"
 # Service dirs to create under cerebro_docker_root, owned by cerebro_puid/pgid.
 # Each entry maps 1:1 to a compose fragment's bind-mount root.
 cerebro_service_dirs:
+  - portainer
   - syncthing/config
   - syncthing/data

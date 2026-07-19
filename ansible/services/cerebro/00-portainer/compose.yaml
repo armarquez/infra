@@ -1,0 +1,14 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - 8000:8000  # Edge agent tunnel
+      - 9000:9000  # HTTP UI (legacy)
+      - 9443:9443  # HTTPS UI (modern)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "{{ cerebro_docker_root }}/portainer:/data"
+    environment:
+      TZ: "{{ cerebro_timezone }}"

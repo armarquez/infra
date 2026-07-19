@@ -16,6 +16,12 @@
     docker_compose_hostname: "{{ cerebro_compose_hostname }}"
   when: cerebro_manage_compose_merge | default(true)
 
+- name: Portainer takeover (pre-deploy)
+  ansible.builtin.include_tasks: portainer.yml
+  when:
+    - cerebro_manage_deploy | default(true)
+    - cerebro_manage_portainer_takeover | default(true)
+
 - name: Deploy merged compose stack
   ansible.builtin.include_tasks: deploy.yml
   when: cerebro_manage_deploy | default(true)

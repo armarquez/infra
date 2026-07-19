@@ -30,18 +30,16 @@ Setup TLS certs via Tailscale - https://sim642.eu/blog/2024/08/11/tailscale-http
 
 ### Portainer
 
-#### Initial Setup
+Managed by the `mqz-cerebro` role via the [`00-portainer` compose fragment](../ansible/services/cerebro/00-portainer/compose.yaml). Bootstrap once per fresh cerebro install:
 
-Following [this guide](https://www.technorabilia.com/portainer-as-alternative-to-synology-docker-gui/) where the key steps are:
+1. Enable Container Manager (DSM Package Center).
+2. Enable SSH (DSM Control Panel → Terminal & SNMP).
+3. Ensure the DSM admin user (see `ansible/inventories/home-network/inventory.yaml` → `ansible_user`) is a member of the `docker` group.
+4. Run `just ansible run cerebro` from the dev box. The `mqz-cerebro` role will (a) create `/volume1/docker/portainer/`, (b) detect and remove any pre-existing manually-created `portainer` container (data volume preserved), (c) bring up Portainer via compose on ports 8000, 9000, and 9443.
 
-1. Enable Container Manager
-2. Enable SSH
-3. SSH to Cerebro: `ssh 192.168.1.250`
-4. Run the following commands:
+Portainer's data (admin account, stacks, environments) is bind-mounted from `/volume1/docker/portainer` and survives container re-creation.
 
-```bash
-sudo docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /volume1/docker/portainer:/data portainer/portainer-ce:latest
-```
+**Admin credentials:** on a truly fresh install (no `/volume1/docker/portainer` yet), Portainer prompts for an admin account on first visit to `http://192.168.1.250:9000`. If migrating from the previous manual install, existing credentials keep working.
 
 #### SSO
 

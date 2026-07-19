@@ -1,0 +1,28 @@
+---
+# Pre-deploy Portainer takeover.
+#
+# `docs/cerebro.md` used to instruct a manual `docker run --name=portainer ...`
+# on new cerebro installs. That container has no compose project label, so
+# `docker compose up` on the compose-managed `portainer` service will fail
+# with a name conflict. Detect any such pre-Ansible container and remove it
+# before compose runs. Its bind-mounted data at {{ cerebro_docker_root }}/portainer
+# is preserved — the compose service re-mounts the same host path.
+#
+# Pattern for other services being migrated from manual `docker run`:
+# copy this file, swap the container name.
+
+- name: Look up existing "portainer" container
+  community.docker.docker_container_info:
+    name: portainer
+  register: cerebro_portainer_existing
+  failed_when: false
+  changed_when: false
+
+- name: Remove pre-Ansible portainer container (bind-mount data preserved)
+  community.docker.docker_container:
+    name: portainer
+    state: absent
+  when:
+    - cerebro_portainer_existing.container is not none
+    - cerebro_portainer_existing.container is defined
+    - (cerebro_portainer_existing.container.Config.Labels | default({}))['com.docker.compose.project'] is not defined
