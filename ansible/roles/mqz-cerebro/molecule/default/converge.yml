@@ -21,5 +21,7 @@
     cerebro_manage_deploy: false
     # No Syncthing running in molecule → skip REST-API config
     cerebro_manage_service_config: false
+    # No Portainer running in molecule → skip takeover check
+    cerebro_manage_portainer_takeover: false
   roles:
     - role: mqz-cerebro

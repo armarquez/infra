@@ -52,7 +52,7 @@
 | Home Assistant OS | phoenix | VM 100 | Yes (TF + manual qcow2 import) | HAOS distributed as VM image |
 | Caddy | phoenix | LXC 201 | Yes (TF + Ansible) | External-facing reverse proxy; wildcard TLS via DNS-01 |
 | Tailscale subnet router | phoenix | host | Yes (Ansible) | Advertises `192.168.1.0/24`; kernel-level networking |
-| Portainer | cerebro | container | **Not codified** (issue #13) | Read-only UI for cerebro's Docker daemon |
+| Portainer | cerebro | container | Yes (Ansible-native via `mqz-cerebro`) | Read-only UI for cerebro's Docker daemon |
 | Channels DVR (+ eplustv + pluto) | cerebro | container | Manual via Portainer (issue #15) | DVR records to NAS storage |
 | IPTV Boss | cerebro | container | Manual via Portainer (issue #15) | Feeds Channels DVR |
 | OliveTin + static-server | cerebro | container | Manual via Portainer (issue #15) | Integrates with Portainer API on cerebro |
@@ -130,7 +130,7 @@ flowchart LR
 Ordered so each phase leaves the system in a working state.
 
 1. **Docs + placement decisions** — this PR (issue #12).
-2. **Codify Portainer install on cerebro** — issue #13.
+2. **Codify Portainer install on cerebro** — ~~issue #13~~ shipped.
 3. **Rotate leaked `CRONITOR_API_KEY` + migrate cerebro secrets to vault** — issue #14 (blocks #15).
 4. **Migrate cerebro compose fragments to Ansible-native deploy** — issue #15. Reference implementation shipped with Syncthing; remaining fragments migrate next.
 5. **Add Molecule scenario for cerebro role(s)** — issue #20.
