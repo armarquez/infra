@@ -23,6 +23,8 @@ cerebro_manage_deploy: true
 cerebro_manage_service_config: true
 # One-time takeover of manually-created Portainer container (safe no-op after)
 cerebro_manage_portainer_takeover: true
+# One-time takeover of manually-created calibre-web-automated container (safe no-op after)
+cerebro_manage_calibre_takeover: true
 
 # Which hostname's fragments to merge. Defaults to `cerebro` so molecule
 # scenarios using different inventory hostnames still find the fragments.

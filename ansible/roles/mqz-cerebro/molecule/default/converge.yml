@@ -23,5 +23,7 @@
     cerebro_manage_service_config: false
     # No Portainer running in molecule → skip takeover check
     cerebro_manage_portainer_takeover: false
+    # No Calibre running in molecule → skip takeover check
+    cerebro_manage_calibre_takeover: false
   roles:
     - role: mqz-cerebro
