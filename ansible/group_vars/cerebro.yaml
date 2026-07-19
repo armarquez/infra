@@ -30,15 +30,27 @@ cerebro_pgid: "100"
 # Timezone / docker root / dir list all inherit sensible defaults from
 # ansible/roles/mqz-cerebro/defaults/main.yml — override only if needed.
 
-# Syncthing declarative folder list — used by the mqz-cerebro role's
-# post-deploy `syncthing.yml` task. Paths are container paths; the compose
-# fragment bind-mounts /volume1/docker/syncthing/data → /var/syncthing/Sync.
-# Add more folders here to have Ansible converge them via the REST API.
+# Syncthing declarative peer devices — used by the mqz-cerebro role's
+# post-deploy `syncthing.yml` task. Each entry gets PUT to Syncthing's
+# /rest/config/devices/{id}. Add a device here, add its `name` to a
+# folder's `share_with` list below, and Ansible converges the peer
+# relationship on re-runs (no more clicking "Add Device" in the GUI
+# after a cerebro re-provision).
+syncthing_devices:
+  - id: ST2ZEQO-B4BVKE2-ALKXA2Y-2M4WPQG-MNIGOKF-TYGIHWI-HCGE2T2-VQMKWQS
+    name: forge   # Anthony's Windows daily-driver laptop
+
+# Syncthing declarative folder list — same task above. Paths are container
+# paths; the compose fragment bind-mounts /volume1/docker/syncthing/data →
+# /var/syncthing/Sync. `share_with` is a list of device names from
+# syncthing_devices above.
 syncthing_folders:
   - id: cerebro-sync
     label: Cerebro Sync
     path: /var/syncthing/Sync
     type: sendreceive
+    share_with:
+      - forge
 
 # Per-service PUID/PGID — preserve the UIDs each service's existing data
 # on cerebro is already owned by. If any of these change, existing data

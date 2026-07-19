@@ -24,6 +24,36 @@
     syncthing_api_key: "{{ syncthing_config_xml.content | b64decode | regex_search('<apikey>([^<]+)</apikey>', '\\1') | first }}"
     syncthing_local_device_id: "{{ syncthing_config_xml.content | b64decode | regex_search('<device id=\"([^\"]+)\"', '\\1') | first }}"
 
+# Devices must be upserted before folders, since folders reference device IDs.
+- name: Upsert Syncthing peer devices
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}:8384/rest/config/devices/{{ item.id }}"
+    method: PUT
+    headers:
+      X-API-Key: "{{ syncthing_api_key }}"
+    body_format: json
+    body:
+      deviceID: "{{ item.id }}"
+      name: "{{ item.name }}"
+      addresses: "{{ item.addresses | default(['dynamic']) }}"
+      compression: "{{ item.compression | default('metadata') }}"
+      autoAcceptFolders: "{{ item.auto_accept_folders | default(false) }}"
+    status_code: [200, 204]
+  loop: "{{ syncthing_devices | default([]) }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# Build name → ID lookup so folder tasks can resolve share_with entries.
+- name: Assemble Syncthing device name → ID lookup
+  ansible.builtin.set_fact:
+    syncthing_device_by_name: >-
+      {{
+        dict(
+          (syncthing_devices | default([]) | map(attribute='name'))
+          | zip(syncthing_devices | default([]) | map(attribute='id'))
+        )
+      }}
+
 - name: Upsert Syncthing folders
   ansible.builtin.uri:
     url: "http://{{ ansible_host }}:8384/rest/config/folders/{{ item.id }}"
@@ -36,8 +66,16 @@
       label: "{{ item.label }}"
       path: "{{ item.path }}"
       type: "{{ item.type | default('sendreceive') }}"
-      devices:
-        - deviceID: "{{ syncthing_local_device_id }}"
+      # Local device first; then each peer named in `share_with` resolved
+      # via the name→ID lookup and wrapped as {"deviceID": <id>}.
+      devices: >-
+        {{
+          [{'deviceID': syncthing_local_device_id}] +
+          (item.share_with | default([])
+            | map('extract', syncthing_device_by_name)
+            | map('community.general.dict_kv', 'deviceID')
+            | list)
+        }}
     status_code: [200, 204]
   loop: "{{ syncthing_folders | default([]) }}"
   loop_control:
