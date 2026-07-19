@@ -89,6 +89,10 @@ setup HOST *TAGS: check-op
 run HOST *TAGS: check-op
   ansible-playbook -b run.yaml --limit {{HOST}} {{TAGS}}
 
+# Shared entry point for ad-hoc troubleshooting. Swap the invoked script as focus shifts.
+troubleshoot:
+  bash {{justfile_directory()}}/scripts/troubleshoot-cerebro.sh
+
 # Perform an action (encrypt/decrypt/edit) on Ansible vault
 vault ACTION: check-op
   EDITOR='code --wait' ansible-vault {{ACTION}} group_vars/secrets.yaml
