@@ -76,9 +76,10 @@ clean-venv:
 ## Ansible operations
 ##########
 
-# Install Ansible Galaxy requirements
+# Install Ansible Galaxy roles + collections
 reqs *FORCE:
-  ansible-galaxy install -r requirements.yaml {{FORCE}}
+  ansible-galaxy role install -r requirements.yaml -p galaxy_roles {{FORCE}}
+  ansible-galaxy collection install -r requirements.yaml {{FORCE}}
 
 # Initial Proxmox setup (SSH password auth, run once)
 setup HOST *TAGS: check-op
