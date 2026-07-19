@@ -1,11 +1,10 @@
 ---
 # Pre-deploy Calibre-Web-Automated takeover.
 #
-# Same pattern as portainer.yml: if a container with the same name exists
-# and doesn't already carry a compose project label, remove it so
-# `docker compose up` can create its replacement with the identical bind
-# mounts. Data at {{ cerebro_docker_root }}/calibre/{config,library,ingest}
-# is preserved — those are host paths, not Docker volumes.
+# Same pattern as portainer.yml: remove any existing container by this name
+# unless it's already part of our compose project. Data at
+# {{ cerebro_docker_root }}/calibre/{config,library,ingest} is preserved —
+# those are host bind mounts, not Docker volumes.
 
 - name: Look up existing "calibre-web-automated" container
   community.docker.docker_container_info:
@@ -18,7 +17,9 @@
   community.docker.docker_container:
     name: calibre-web-automated
     state: absent
+  vars:
+    _labels: "{{ cerebro_calibre_existing.container.Config.Labels | default({}) }}"
   when:
     - cerebro_calibre_existing.container is not none
     - cerebro_calibre_existing.container is defined
-    - (cerebro_calibre_existing.container.Config.Labels | default({}))['com.docker.compose.project'] is not defined
+    - _labels['com.docker.compose.project'] | default('') != cerebro_compose_project_name

@@ -2,6 +2,7 @@
 - name: Bring up compose stack
   community.docker.docker_compose_v2:
     project_src: "{{ cerebro_compose_dir }}"
+    project_name: "{{ cerebro_compose_project_name }}"
     files:
       - compose.yaml
     state: present
