@@ -9,6 +9,31 @@ Cerebro's containerised services are defined declaratively in this repo:
 - Apply with `just ansible run cerebro`.
 - Syncthing is the reference implementation of the pattern (compose fragment + REST-API-driven folder config in `group_vars/cerebro.yaml` → `syncthing_folders`). Existing services (Calibre, Channels DVR, IPTV Boss, OliveTin, Acme, Code-Server) still deploy through Portainer today; migration is tracked in issue #15.
 
+### One-time bootstrap on a fresh cerebro
+
+Run these once as `krakoa` via SSH before the first `just ansible run cerebro`. Codifying this into an Ansible `raw`-module play is a follow-up.
+
+1. **Groups + sudo** (via DSM Control Panel UI on `krakoa` user): join `administrators` and `docker` groups.
+2. **Passwordless sudo** (via SSH as `krakoa`):
+   ```bash
+   sudo tee /etc/sudoers.d/krakoa <<< 'krakoa ALL=(ALL) NOPASSWD: ALL'
+   sudo chmod 440 /etc/sudoers.d/krakoa
+   ```
+3. **Tight SSH permissions** (Synology's default home dir mode blocks pubkey auth):
+   ```bash
+   chmod 700 ~ ~/.ssh
+   chmod 600 ~/.ssh/authorized_keys
+   ```
+4. **Python 3.11 via uv** (DSM ships 3.8; ansible-core needs 3.9+):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   source $HOME/.local/bin/env
+   uv python install 3.11
+   uv venv --python 3.11 ~/.venvs/ansible
+   uv pip install --python ~/.venvs/ansible/bin/python docker
+   ```
+   `ansible/inventories/home-network/inventory.yaml` already points `ansible_python_interpreter` at the resulting venv.
+
 ## Networking
 
 - Cerebro's IP address is staticly defined in the router - `192.168.1.250`
