@@ -28,6 +28,7 @@
 - hosts: cerebro
   vars_files:
     - 'group_vars/secrets.yaml'
+  become: true
   gather_facts: false
   roles:
     - role: mqz-cerebro
