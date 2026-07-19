@@ -34,6 +34,10 @@ Run these once as `krakoa` via SSH before the first `just ansible run cerebro`. 
    ```
    `ansible/inventories/home-network/inventory.yaml` already points `ansible_python_interpreter` at the resulting venv.
 
+### Troubleshooting
+
+`just ansible troubleshoot` runs a read-only diagnostic on cerebro (docker CLI availability under sudo, home dir resolution, existing containers + compose-project labels, `/volume1/docker/*` ownership, sudoers, Python venv). Output tees to `/tmp/cerebro-troubleshoot.log`. Paste that log when debugging a failed `just ansible run cerebro`.
+
 ## Networking
 
 - Cerebro's IP address is staticly defined in the router - `192.168.1.250`
