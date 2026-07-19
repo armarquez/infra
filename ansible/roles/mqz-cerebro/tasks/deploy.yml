@@ -7,3 +7,4 @@
     state: present
     pull: missing
     remove_orphans: true
+    docker_cli: "{{ cerebro_docker_cli }}"
