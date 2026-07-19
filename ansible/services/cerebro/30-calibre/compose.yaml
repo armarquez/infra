@@ -3,14 +3,14 @@ services:
     image: crocodilestick/calibre-web-automated:latest
     container_name: calibre-web-automated
     environment:
-      PUID: "1026"
-      PGID: "100"
-      TZ: "America/Phoenix"
+      PUID: "{{ calibre_puid | default('1026') }}"
+      PGID: "{{ calibre_pgid | default('100') }}"
+      TZ: "{{ cerebro_timezone }}"
       DOCKER_MODS: "lscr.io/linuxserver/mods:universal-calibre"
     volumes:
-      - /volume1/docker/calibre/config:/config
-      - /volume1/docker/calibre/library:/calibre-library
-      - /volume1/docker/calibre/ingest:/cwa-book-ingest
+      - "{{ cerebro_docker_root }}/calibre/config:/config"
+      - "{{ cerebro_docker_root }}/calibre/library:/calibre-library"
+      - "{{ cerebro_docker_root }}/calibre/ingest:/cwa-book-ingest"
     ports:
       - 8083:8083
     restart: unless-stopped

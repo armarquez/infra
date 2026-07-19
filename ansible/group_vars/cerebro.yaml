@@ -24,3 +24,14 @@ syncthing_folders:
     label: Cerebro Sync
     path: /var/syncthing/Sync
     type: sendreceive
+
+# Per-service PUID/PGID — preserve the UIDs each service's existing data
+# on cerebro is already owned by. If any of these change, existing data
+# under /volume1/docker/<service>/ needs to be chowned to match, or the
+# service won't be able to read its own files.
+calibre_puid: "1026"
+calibre_pgid: "100"
+channels_dvr_puid: "1028"
+channels_dvr_pgid: "100"
+iptv_boss_puid: "1028"
+iptv_boss_pgid: "100"

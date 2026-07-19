@@ -25,9 +25,32 @@ cerebro_compose_hostname: cerebro
 # Where the merged compose file lands on the remote (Ansible SSH user's home)
 cerebro_compose_dir: "/home/{{ ansible_user }}"
 
-# Service dirs to create under cerebro_docker_root, owned by cerebro_puid/pgid.
-# Each entry maps 1:1 to a compose fragment's bind-mount root.
+# Service dirs to create under cerebro_docker_root.
+# Each entry is a dict — path is relative to cerebro_docker_root; puid/pgid
+# are per-service so services with their own owner UID (calibre 1026,
+# channels-dvr 1028, etc.) don't get chowned to a wrong owner.
 cerebro_service_dirs:
-  - portainer
-  - syncthing/config
-  - syncthing/data
+  - path: portainer
+    puid: "{{ cerebro_puid }}"
+    pgid: "{{ cerebro_pgid }}"
+  - path: syncthing/config
+    puid: "{{ cerebro_puid }}"
+    pgid: "{{ cerebro_pgid }}"
+  - path: syncthing/data
+    puid: "{{ cerebro_puid }}"
+    pgid: "{{ cerebro_pgid }}"
+  - path: calibre/config
+    puid: "{{ calibre_puid | default('1026') }}"
+    pgid: "{{ calibre_pgid | default('100') }}"
+  - path: calibre/library
+    puid: "{{ calibre_puid | default('1026') }}"
+    pgid: "{{ calibre_pgid | default('100') }}"
+  - path: calibre/ingest
+    puid: "{{ calibre_puid | default('1026') }}"
+    pgid: "{{ calibre_pgid | default('100') }}"
+  - path: eplustv
+    puid: "{{ channels_dvr_puid | default('1028') }}"
+    pgid: "{{ channels_dvr_pgid | default('100') }}"
+  - path: iptv-boss
+    puid: "{{ iptv_boss_puid | default('1028') }}"
+    pgid: "{{ iptv_boss_pgid | default('100') }}"
