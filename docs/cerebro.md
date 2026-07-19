@@ -36,7 +36,9 @@ Run these once as `krakoa` via SSH before the first `just ansible run cerebro`. 
 
 ### Troubleshooting
 
-`just ansible troubleshoot` runs a read-only diagnostic on cerebro (docker CLI availability under sudo, home dir resolution, existing containers + compose-project labels, `/volume1/docker/*` ownership, sudoers, Python venv). Output tees to `/tmp/cerebro-troubleshoot.log`. Paste that log when debugging a failed `just ansible run cerebro`.
+The `just ansible troubleshoot` recipe is a shared entry point for ad-hoc diagnostics — it invokes whichever script is currently useful. Today it points at `scripts/troubleshoot-cerebro.sh`, a read-only dump of docker CLI availability under sudo, home dir resolution, existing containers + compose-project labels, `/volume1/docker/*` ownership, sudoers, and Python venv state. Output tees to `/tmp/cerebro-troubleshoot.log`. Paste that log when debugging a failed `just ansible run cerebro`.
+
+As focus shifts to other hosts, swap the script path in the recipe rather than adding new recipes.
 
 ## Networking
 

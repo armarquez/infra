@@ -89,7 +89,7 @@ setup HOST *TAGS: check-op
 run HOST *TAGS: check-op
   ansible-playbook -b run.yaml --limit {{HOST}} {{TAGS}}
 
-# Diagnostic dump of cerebro deploy-flow state — read-only, saves to /tmp/cerebro-troubleshoot.log
+# Shared entry point for ad-hoc troubleshooting. Swap the invoked script as focus shifts.
 troubleshoot:
   bash {{justfile_directory()}}/scripts/troubleshoot-cerebro.sh
 
