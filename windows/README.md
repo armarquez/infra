@@ -7,9 +7,25 @@ Currently only one machine (`forge`, the daily-driver laptop). If additional Win
 ## Scripts
 
 - **`scripts/setup-syncthing.ps1`** — installs Syncthing via winget, registers a scheduled task that runs it at login (with restart-on-crash and battery-safe), and prints the device ID for pairing with cerebro. Idempotent — safe to re-run.
-  ```powershell
-  pwsh windows/scripts/setup-syncthing.ps1
-  ```
+
+### Running from WSL (recommended — no context switch)
+
+Windows PowerShell is reachable from WSL via Windows interop. `wslpath -w` converts the Linux repo path to a Windows path:
+
+```bash
+cd /home/boogey/dev/armarquez/infra
+powershell.exe -ExecutionPolicy Bypass -File "$(wslpath -w windows/scripts/setup-syncthing.ps1)"
+```
+
+The script executes on the Windows side even though you invoked it from WSL — every action (scheduled task, process check, localhost HTTP call) touches Windows, not the WSL Linux userspace.
+
+### Running from Windows PowerShell directly
+
+Either:
+- **Windows PowerShell 5.1** (built-in): `powershell.exe -ExecutionPolicy Bypass -File windows\scripts\setup-syncthing.ps1`
+- **PowerShell 7+** (`winget install Microsoft.PowerShell`): `pwsh -File windows\scripts\setup-syncthing.ps1`
+
+The `#Requires -Version 5.0` directive at the top of the script accepts either.
 
 ## Why PowerShell, not Ansible
 
