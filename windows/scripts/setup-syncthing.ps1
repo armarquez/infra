@@ -20,7 +20,11 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-if ($PSVersionTable.Platform -eq 'Unix') {
+# `$PSVersionTable.Platform` was added in PowerShell 6. PowerShell 5.1 is
+# Windows-only, so the check is only meaningful on 6+. Guard the property
+# access; `Set-StrictMode -Version Latest` makes the missing property fatal
+# on 5.1 otherwise.
+if ($PSVersionTable.PSVersion.Major -ge 6 -and $PSVersionTable.Platform -eq 'Unix') {
     throw "This script is Windows-only. Detected Platform=$($PSVersionTable.Platform)."
 }
 
