@@ -1,0 +1,16 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ensure fake docker root exists (stands in for /volume1/docker)
+      ansible.builtin.file:
+        path: /tmp/fake-docker-root
+        state: directory
+        mode: "0755"
+
+    - name: Ensure fake compose output dir exists (stands in for ~krakoa)
+      ansible.builtin.file:
+        path: /tmp/fake-compose
+        state: directory
+        mode: "0755"

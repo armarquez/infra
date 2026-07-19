@@ -1,0 +1,9 @@
+---
+- name: Ensure per-service data directories exist
+  ansible.builtin.file:
+    path: "{{ cerebro_docker_root }}/{{ item }}"
+    state: directory
+    owner: "{{ cerebro_puid }}"
+    group: "{{ cerebro_pgid }}"
+    mode: "0755"
+  loop: "{{ cerebro_service_dirs }}"

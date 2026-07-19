@@ -1,0 +1,29 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../../../../requirements.yaml
+    roles-path: ../../../../galaxy_roles
+driver:
+  name: docker
+platforms:
+  - name: cerebro-test
+    image: geerlingguy/docker-debian12-ansible:latest
+    pre_build_image: true
+    privileged: false
+    cgroupns_mode: host
+    tmpfs:
+      - /run
+      - /tmp
+    command: "sleep infinity"
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      remote_tmp: /tmp
+  inventory:
+    host_vars:
+      cerebro-test:
+        ansible_user: root
+verifier:
+  name: ansible

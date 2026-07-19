@@ -1,0 +1,25 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+  vars:
+    # Inherited-from-all defaults that mqz-cerebro references
+    timezone: "America/Phoenix"
+
+    # Override role defaults so molecule can run without Synology / Docker
+    cerebro_docker_root: /tmp/fake-docker-root
+    cerebro_compose_dir: /tmp/fake-compose
+    cerebro_puid: "0"
+    cerebro_pgid: "0"
+    cerebro_manage_dirs: true
+    # docker_compose_generator resolves services_directory from playbook_dir,
+    # which under molecule points at an ephemeral dir; skip merge in CI.
+    cerebro_manage_compose_merge: false
+    # DinD is present but skipping compose-up keeps the test focused on the
+    # role's own logic; docker_compose_v2 module needs the merged file plus
+    # a working images pull, which is out of scope for this scenario.
+    cerebro_manage_deploy: false
+    # No Syncthing running in molecule → skip REST-API config
+    cerebro_manage_service_config: false
+  roles:
+    - role: mqz-cerebro

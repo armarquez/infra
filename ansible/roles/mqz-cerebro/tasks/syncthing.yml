@@ -1,0 +1,44 @@
+---
+# Post-deploy Syncthing configuration via its REST API.
+#
+# Pattern for other services with a REST API (Portainer, Home Assistant, etc.):
+#   1. Wait for the service to answer on its GUI/API port.
+#   2. Discover an auth token — either from the service's on-disk config or from vault.
+#   3. Idempotently upsert the desired declarative resources via HTTP.
+#
+# Docs: https://docs.syncthing.net/rest/config.html
+
+- name: Wait for Syncthing GUI to answer
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 8384
+    timeout: 60
+
+- name: Read Syncthing config.xml (holds auto-generated API key + local device id)
+  ansible.builtin.slurp:
+    src: "{{ cerebro_docker_root }}/syncthing/config/config.xml"
+  register: syncthing_config_xml
+
+- name: Extract Syncthing API key and local device id from config.xml
+  ansible.builtin.set_fact:
+    syncthing_api_key: "{{ syncthing_config_xml.content | b64decode | regex_search('<apikey>([^<]+)</apikey>', '\\1') | first }}"
+    syncthing_local_device_id: "{{ syncthing_config_xml.content | b64decode | regex_search('<device id=\"([^\"]+)\"', '\\1') | first }}"
+
+- name: Upsert Syncthing folders
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}:8384/rest/config/folders/{{ item.id }}"
+    method: PUT
+    headers:
+      X-API-Key: "{{ syncthing_api_key }}"
+    body_format: json
+    body:
+      id: "{{ item.id }}"
+      label: "{{ item.label }}"
+      path: "{{ item.path }}"
+      type: "{{ item.type | default('sendreceive') }}"
+      devices:
+        - deviceID: "{{ syncthing_local_device_id }}"
+    status_code: [200, 204]
+  loop: "{{ syncthing_folders | default([]) }}"
+  loop_control:
+    label: "{{ item.id }}"

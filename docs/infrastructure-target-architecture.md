@@ -59,6 +59,7 @@
 | Calibre-Web-Automated | cerebro | container | Manual via Portainer (issue #15) | Book library on NAS storage |
 | acme.sh | cerebro | container | Manual via Portainer (issue #15) | Renews DSM certs — Synology-specific |
 | Code-Server | cerebro | container | Stub only | Placeholder; cerebro has 64 GB RAM to spare |
+| Syncthing | cerebro | container | Yes (Ansible-native via `mqz-cerebro`) | Reference implementation of the Ansible-native cerebro deploy pattern |
 
 ## Runtime Tiers
 
@@ -131,7 +132,7 @@ Ordered so each phase leaves the system in a working state.
 1. **Docs + placement decisions** — this PR (issue #12).
 2. **Codify Portainer install on cerebro** — issue #13.
 3. **Rotate leaked `CRONITOR_API_KEY` + migrate cerebro secrets to vault** — issue #14 (blocks #15).
-4. **Migrate cerebro compose fragments to Ansible-native deploy** — issue #15.
+4. **Migrate cerebro compose fragments to Ansible-native deploy** — issue #15. Reference implementation shipped with Syncthing; remaining fragments migrate next.
 5. **Add Molecule scenario for cerebro role(s)** — issue #20.
 6. **Phoenix provisioning polish** — HAOS auto-import (issue #17), LXC template auto-download (issue #19), `mqz-phoenix` cleanup (issue #16).
 7. **Stale `dazzler` cleanup** — issue #18; low priority, do alongside any issue that touches the inventory files.

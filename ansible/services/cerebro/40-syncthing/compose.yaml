@@ -1,0 +1,16 @@
+services:
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: syncthing
+    hostname: cerebro-syncthing
+    network_mode: host
+    environment:
+      PUID: "{{ cerebro_puid }}"
+      PGID: "{{ cerebro_pgid }}"
+      TZ: "{{ cerebro_timezone }}"
+      STGUIADDRESS: "0.0.0.0:8384"
+      STNODEFAULTFOLDER: "true"
+    volumes:
+      - "{{ cerebro_docker_root }}/syncthing/config:/var/syncthing/config"
+      - "{{ cerebro_docker_root }}/syncthing/data:/var/syncthing/Sync"
+    restart: unless-stopped

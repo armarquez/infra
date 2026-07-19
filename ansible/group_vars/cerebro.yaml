@@ -1,20 +1,26 @@
 ---
+# cerebro is a Synology DS1821+; ansible connects as the DSM admin user.
+# The Container Manager package (Synology's Docker) exposes the daemon socket
+# to the docker group. `krakoa` is a member of that group — no `become: true`
+# needed for docker operations.
 
-  ###
-  # - service_name:
-  #   active: false
-  #   image:
-  #   container_name: #optional - only required if diff to service_name
-  #   labels:
-  #     - traefik.enable=true
-  #     - "traefik.http.routers.XXXXXXXX.rule=Host(`wiki.{{ local_domain }}`)"
-  #     - traefik.http.routers.XXXXXXX.entrypoints=websecure
-  #     - traefik.http.routers.XXXXXXX.tls.certresolver=cloudflare
-  #     - traefik.http.services.XXXXXXX.loadbalancer.server.port=80
-  #     #- traefik.http.routers.XXXXXXX.middlewares=authelia@docker
-  #   volumes:
-  #     - "{{ appdata_path }}/app:/config"
-  #   environment:
-  #     -
-  #   include_global_env_vars: #optional - defaults to false
-  #   restart: unless-stopped
+# mqz-cerebro role vars
+#
+# UID/GID must match the runtime `id` of ansible_user on cerebro (verified by
+# the role's preflight). Override here if `id krakoa` on cerebro returns
+# different values than the defaults (1028/100).
+# cerebro_puid: "1028"
+# cerebro_pgid: "100"
+
+# Timezone / docker root / dir list all inherit sensible defaults from
+# ansible/roles/mqz-cerebro/defaults/main.yml — override only if needed.
+
+# Syncthing declarative folder list — used by the mqz-cerebro role's
+# post-deploy `syncthing.yml` task. Paths are container paths; the compose
+# fragment bind-mounts /volume1/docker/syncthing/data → /var/syncthing/Sync.
+# Add more folders here to have Ansible converge them via the REST API.
+syncthing_folders:
+  - id: cerebro-sync
+    label: Cerebro Sync
+    path: /var/syncthing/Sync
+    type: sendreceive
