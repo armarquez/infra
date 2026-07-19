@@ -40,6 +40,12 @@
     - cerebro_manage_deploy | default(true)
     - cerebro_manage_iptv_boss_takeover | default(true)
 
+- name: The Collector takeover (pre-deploy)
+  ansible.builtin.include_tasks: the_collector.yml
+  when:
+    - cerebro_manage_deploy | default(true)
+    - cerebro_manage_the_collector_takeover | default(true)
+
 - name: Deploy merged compose stack
   ansible.builtin.include_tasks: deploy.yml
   when: cerebro_manage_deploy | default(true)

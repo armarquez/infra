@@ -1,0 +1,66 @@
+services:
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
+    environment:
+      PUID: "{{ the_collector_puid | default('1028') }}"
+      PGID: "{{ the_collector_pgid | default('100') }}"
+      TZ: "{{ cerebro_timezone }}"
+      NZBGET_USER: nzbget
+      NZBGET_PASS: "{{ nzbget_password }}"
+    volumes:
+      - "{{ cerebro_docker_root }}/nzbget/config:/config"
+      - /volume1/Media-Shared/downloads:/downloads
+    ports:
+      - 27020:6789
+    restart: unless-stopped
+
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      PUID: "{{ the_collector_puid | default('1028') }}"
+      PGID: "{{ the_collector_pgid | default('100') }}"
+      TZ: "{{ cerebro_timezone }}"
+      DELUGE_LOGLEVEL: error
+    volumes:
+      - "{{ cerebro_docker_root }}/deluge/config:/config"
+      - /volume1/Media-Shared/downloads:/downloads
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+      - 58846:58846
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    depends_on:
+      - nzbget
+    environment:
+      PUID: "{{ the_collector_puid | default('1028') }}"
+      PGID: "{{ the_collector_pgid | default('100') }}"
+      TZ: "{{ cerebro_timezone }}"
+    volumes:
+      - "{{ cerebro_docker_root }}/sonarr/config:/config"
+      - /volume1/Media-Shared/media/tv:/tv
+      - /volume1/Media-Shared/downloads:/downloads
+    ports:
+      - 27021:8989
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      PUID: "{{ the_collector_puid | default('1028') }}"
+      PGID: "{{ the_collector_pgid | default('100') }}"
+      TZ: "{{ cerebro_timezone }}"
+    volumes:
+      - "{{ cerebro_docker_root }}/radarr/config:/config"
+      - /volume1/Media-Shared/media/movies:/movies
+      - /volume1/Media-Shared/downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped

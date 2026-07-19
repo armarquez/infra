@@ -56,7 +56,7 @@ Current fragment / service state:
 | `12-olivetin-channels` | `olivetin`, `static-file-server` (Portainer) | disabled | broken `version: '3.9'` stanza + `${PORTAINER_TOKEN}` interpolation |
 | `20-codeserver` | *(none)* | disabled | empty stub |
 | `30-calibre` | `calibre-web-automated` | **Enabled** — pre-Ansible container removed on first run, replaced by compose (bind-mount data preserved) | — |
-| *(no fragment yet)* | `the-collector` DSM Container Manager Project: nzbget, deluge, sonarr, radarr | **needs new fragment** | + `NZBGET_PASS` in vault |
+| `50-the-collector` | `nzbget`, `deluge`, `sonarr`, `radarr` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose. `nzbget_password` templated from vault. | — |
 | *(no fragment yet)* | `channels-remote`, `adbtuner` (DSM Container Manager individual containers) | **needs new fragment** | — |
 
 The `disabled_compose_files` list in `ansible/group_vars/cerebro.yaml` is the switch — remove an entry once the corresponding takeover is written.
