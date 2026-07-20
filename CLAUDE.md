@@ -218,8 +218,9 @@ When adding a new role, create a molecule scenario with the same structure. Task
 - `initial_password` — used for Proxmox ISO unattended install and initial Ansible connection
 - `tailscale_authkey` — Tailscale auth key for `mqz-tailscale` role
 - `cloudflare_caddy_api_token` — Cloudflare API token for Caddy DNS-01 challenge and Terraform Cloudflare provider
-- `cloudflare_zone_id` — Cloudflare Zone ID for `mqz.casa` (used by Terraform DNS records; not secret but centralized here for uniformity)
 - `plex_claim_token` — Plex claim token (expires in 4 minutes; get from plex.tv/claim)
+
+Non-secret Terraform config (Cloudflare Zone ID, endpoints, node names) lives in `terraform/environments/<env>/variables.tf` as `default = "..."`, not in vault.
 
 ### Ansible Structure
 
