@@ -9,10 +9,14 @@ services:
     image: iarekylew00t/caddy-cloudflare:latest
     container_name: caddy
     restart: unless-stopped
+    # Host-side alt ports because DSM's nginx already owns 80/443 on cerebro
+    # (Application Portal default listener). 8443 is not usable either —
+    # code-server binds it. When Caddy moves to phoenix (no DSM there),
+    # remap back to 80/443 for clean URLs.
     ports:
-      - 80:80
-      - 443:443
-      - 443:443/udp
+      - 8880:80
+      - 4443:443
+      - 4443:443/udp
     environment:
       TZ: "{{ cerebro_timezone }}"
       CLOUDFLARE_API_TOKEN: "{{ cloudflare_caddy_api_token }}"
