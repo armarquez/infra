@@ -1,7 +1,10 @@
 # Caddy Reverse Proxy LXC
 # Handles TLS termination for *.mqz.casa via Cloudflare DNS-01 challenge.
 # All internal services are routed through here — nothing is exposed directly.
-
+#
+# DISABLED until phoenix is provisioned. Caddy runs interim on cerebro as a
+# Docker container (see ansible/services/cerebro/09-caddy/).
+/*
 resource "proxmox_virtual_environment_container" "caddy" {
   description = "Caddy reverse proxy — TLS termination for *.mqz.casa"
   node_name   = var.proxmox_node
@@ -43,3 +46,4 @@ resource "proxmox_virtual_environment_container" "caddy" {
     down_delay = 10
   }
 }
+*/

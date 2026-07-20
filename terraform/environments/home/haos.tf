@@ -13,6 +13,12 @@
 #     or with `lifecycle { ignore_changes = [disk] }` first.
 #   - Bump `haos_version` in variables.tf (or via TF_VAR_haos_version) to pull a
 #     newer HAOS release. Check https://github.com/home-assistant/operating-system/releases
+#
+# DISABLED until phoenix is provisioned. Two known issues to address when
+# re-enabling: `proxmox_virtual_environment_download_file` is deprecated (use
+# `proxmox_download_file`), and `decompression_algorithm = "xz"` is no longer
+# accepted by bpg/proxmox 0.70+ (only gz/lzo/zst/bz2).
+/*
 resource "proxmox_virtual_environment_download_file" "haos_qcow2" {
   content_type            = "iso"
   datastore_id            = var.haos_datastore_id
@@ -76,3 +82,4 @@ resource "proxmox_virtual_environment_vm" "home_assistant" {
     type = "l26" # Linux 2.6+ kernel
   }
 }
+*/

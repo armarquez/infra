@@ -11,7 +11,9 @@
 #   lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
 #
 # The container also needs the 'video' and 'render' group GIDs mapped to match the host.
-
+#
+# DISABLED until phoenix is provisioned.
+/*
 resource "proxmox_virtual_environment_container" "plex" {
   description = "Plex Media Server with Intel QuickSync hardware transcoding"
   node_name   = var.proxmox_node
@@ -60,3 +62,4 @@ resource "proxmox_virtual_environment_container" "plex" {
     down_delay = 10
   }
 }
+*/
