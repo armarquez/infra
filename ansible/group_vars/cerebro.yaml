@@ -14,7 +14,7 @@
 disabled_compose_files:
   - 00-acme-sh              # secrets not in vault; conflicts with running acme.sh
   - 12-olivetin-channels    # deprecated version stanza + PORTAINER_TOKEN interpolation broken
-  - 20-codeserver           # empty stub
+  - 09-caddy                # verify cloudflare_caddy_api_token is in vault first, then remove this line
 
 # mqz-cerebro role vars
 #
@@ -61,3 +61,7 @@ iptv_boss_puid: "1028"
 iptv_boss_pgid: "100"
 the_collector_puid: "1028"
 the_collector_pgid: "100"
+
+# Caddy interim on cerebro (target home is phoenix; migrate later).
+# Contact used for Let's Encrypt renewal notifications.
+cerebro_caddy_email: armarquez@gmail.com

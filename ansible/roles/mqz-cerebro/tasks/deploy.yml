@@ -1,4 +1,33 @@
 ---
+# Two-phase deploy — pre-pull each image as its own Ansible task, then run
+# `docker compose up` with images already local.
+#
+# Why: `docker_compose_v2` calls `docker compose up --quiet-pull`, which
+# suppresses per-image progress. On first runs (or after adding a new
+# service like code-server) a multi-GB pull can silently take 10-20
+# minutes with no output. Splitting the pulls out into their own tasks
+# means each image gets a discrete `docker_image_pull` task with clear
+# "changed" / "ok" status and attributable timing. `docker compose up`
+# then flies through with no pulls of its own.
+
+- name: Read the merged compose file
+  ansible.builtin.slurp:
+    src: "{{ cerebro_compose_dir }}/compose.yaml"
+  register: _cerebro_merged_compose
+
+- name: Extract unique service images from the merged compose
+  ansible.builtin.set_fact:
+    _cerebro_compose_images: >-
+      {{ (_cerebro_merged_compose.content | b64decode | from_yaml).services.values()
+         | map(attribute='image') | unique | list }}
+
+- name: Pre-pull compose images (per-image visible timing)
+  community.docker.docker_image_pull:
+    name: "{{ item }}"
+  loop: "{{ _cerebro_compose_images }}"
+  loop_control:
+    label: "{{ item }}"
+
 - name: Bring up compose stack
   community.docker.docker_compose_v2:
     project_src: "{{ cerebro_compose_dir }}"
@@ -6,6 +35,9 @@
     files:
       - compose.yaml
     state: present
+    # `missing` (rather than `never`) is a safety net: pre-pull above should
+    # have covered everything, but if some image slipped through we still
+    # pull it here rather than fail.
     pull: missing
     remove_orphans: true
     docker_cli: "{{ cerebro_docker_cli }}"

@@ -1,0 +1,10 @@
+services:
+  channels-remote:
+    image: rcvaughn2/channels-remote-plus:latest
+    container_name: channels-remote
+    environment:
+      CHANNELS_DVR_SERVERS: "192.168.1.250:8089"
+      TZ: "{{ cerebro_timezone }}"
+    ports:
+      - 5020:5000
+    restart: unless-stopped

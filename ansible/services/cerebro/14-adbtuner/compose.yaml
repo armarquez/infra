@@ -1,0 +1,11 @@
+services:
+  adbtuner:
+    image: turtletank99/adbtuner:latest
+    container_name: adbtuner
+    environment:
+      TZ: "{{ cerebro_timezone }}"
+    volumes:
+      - "{{ cerebro_docker_root }}/adbtuner/config:/app/.config"
+    ports:
+      - 5592:5592
+    restart: unless-stopped

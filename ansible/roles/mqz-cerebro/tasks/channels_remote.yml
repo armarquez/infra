@@ -1,0 +1,24 @@
+---
+# Pre-deploy channels-remote takeover.
+#
+# Existing container deployed via DSM Container Manager Project
+# (compose project label "channels-app-remote-plus"). Stateless — no
+# data mounts, no migration needed.
+
+- name: Look up existing channels-remote container
+  community.docker.docker_container_info:
+    name: channels-remote
+  register: cerebro_channels_remote_existing
+  failed_when: false
+  changed_when: false
+
+- name: Remove pre-Ansible channels-remote container
+  community.docker.docker_container:
+    name: channels-remote
+    state: absent
+  vars:
+    _labels: "{{ cerebro_channels_remote_existing.container.Config.Labels | default({}) }}"
+  when:
+    - cerebro_channels_remote_existing.container is not none
+    - cerebro_channels_remote_existing.container is defined
+    - _labels['com.docker.compose.project'] | default('') != cerebro_compose_project_name

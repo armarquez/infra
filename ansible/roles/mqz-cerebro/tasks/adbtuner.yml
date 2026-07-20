@@ -1,0 +1,47 @@
+---
+# Pre-deploy adbtuner takeover + one-time data migration.
+#
+# Existing adbtuner container was deployed via DSM Container Manager
+# Project. Config lived in a Docker named volume at
+# /volume1/@docker/volumes/adbtuner_config/_data — we migrate to a bind
+# mount at {{ cerebro_docker_root }}/adbtuner/config so the data lives
+# alongside other cerebro service state and is easier to back up.
+#
+# The migration `cp -a` runs once and drops a sentinel file so
+# re-runs are no-ops via `creates:`.
+
+# The `cp -a` below fails on a fresh cerebro where the named-volume source
+# doesn't exist. Guard with a stat so a re-provisioned cerebro (no legacy
+# named volume) skips the migration cleanly instead of erroring.
+- name: Check whether adbtuner named-volume source exists on this host
+  ansible.builtin.stat:
+    path: /volume1/@docker/volumes/adbtuner_config/_data
+  register: _cerebro_adbtuner_source
+
+- name: One-time migrate adbtuner named-volume data to bind mount
+  ansible.builtin.shell: |
+    cp -a /volume1/@docker/volumes/adbtuner_config/_data/. {{ cerebro_docker_root }}/adbtuner/config/
+    touch {{ cerebro_docker_root }}/adbtuner/config/.ansible-migrated
+  args:
+    creates: "{{ cerebro_docker_root }}/adbtuner/config/.ansible-migrated"
+  when:
+    - _cerebro_adbtuner_source.stat.exists
+    - cerebro_manage_adbtuner_data_migration | default(true)
+
+- name: Look up existing adbtuner container
+  community.docker.docker_container_info:
+    name: adbtuner
+  register: cerebro_adbtuner_existing
+  failed_when: false
+  changed_when: false
+
+- name: Remove pre-Ansible adbtuner container
+  community.docker.docker_container:
+    name: adbtuner
+    state: absent
+  vars:
+    _labels: "{{ cerebro_adbtuner_existing.container.Config.Labels | default({}) }}"
+  when:
+    - cerebro_adbtuner_existing.container is not none
+    - cerebro_adbtuner_existing.container is defined
+    - _labels['com.docker.compose.project'] | default('') != cerebro_compose_project_name
