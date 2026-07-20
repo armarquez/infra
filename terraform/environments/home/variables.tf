@@ -1,3 +1,7 @@
+# Proxmox + Tailscale variables disabled until phoenix is provisioned and
+# we start managing Tailscale via Terraform. Re-enable alongside the provider
+# blocks in main.tf and the resource files (haos.tf, lxc-*.tf).
+/*
 # Proxmox
 # Reference: https://registry.terraform.io/providers/bpg/proxmox/latest/docs
 
@@ -33,6 +37,7 @@ variable "tailscale_oauth_client_secret" {
   type        = string
   sensitive   = true
 }
+*/
 
 # Cloudflare
 # Reference: https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs
@@ -63,6 +68,8 @@ variable "phoenix_ip" {
   default     = "192.168.1.240"
 }
 
+# Proxmox node + HAOS variables disabled until phoenix is provisioned.
+/*
 variable "proxmox_node" {
   description = "Proxmox node name to deploy resources on"
   type        = string
@@ -82,3 +89,4 @@ variable "haos_datastore_id" {
   type        = string
   default     = "local"
 }
+*/
