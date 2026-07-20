@@ -54,7 +54,7 @@ Current fragment / service state:
 | `10-channels-dvr` | `channels-dvr-eplustv-1`, `pluto-for-channels` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose | — |
 | `11-iptv-boss` | `iptv-boss-iptvboss-1` | **Enabled** — pre-Ansible container removed on first run, replaced by compose | — |
 | `12-olivetin-channels` | `olivetin`, `static-file-server` (Portainer) | disabled | broken `version: '3.9'` stanza + `${PORTAINER_TOKEN}` interpolation |
-| `20-codeserver` | *(new — never ran)* | disabled | needs `codeserver_password` + `codeserver_sudo_password` in vault; then remove from `disabled_compose_files` |
+| `20-codeserver` | `codeserver` | **Enabled** — `codeserver_password` + `codeserver_sudo_password` in vault; browser access at `https://192.168.1.250:8443` | — |
 | `30-calibre` | `calibre-web-automated` | **Enabled** — pre-Ansible container removed on first run, replaced by compose (bind-mount data preserved) | — |
 | `50-the-collector` | `nzbget`, `deluge`, `sonarr`, `radarr` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose. `nzbget_password` templated from vault. | — |
 | `13-channels-remote` | `channels-remote` | **Enabled** — stateless takeover; project label was `channels-app-remote-plus` | — |
