@@ -1,0 +1,16 @@
+{# Managed by mqz-cerebro role — edit templates/Caddyfile.j2, not the deployed copy. #}
+
+{
+    email {{ cerebro_caddy_email }}
+    acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+}
+
+# code-server (in-browser VS Code) — reverse proxy over the compose bridge network
+code.mqz.casa {
+    reverse_proxy http://codeserver:8443
+}
+
+# Syncthing GUI — running with network_mode: host on cerebro, so use the LAN IP
+syncthing.mqz.casa {
+    reverse_proxy http://192.168.1.250:8384
+}

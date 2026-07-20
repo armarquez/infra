@@ -50,6 +50,12 @@ variable "cloudflare_zone_id" {
 
 # Shared infrastructure values
 
+variable "cerebro_ip" {
+  description = "LAN IP of the cerebro Synology NAS"
+  type        = string
+  default     = "192.168.1.250"
+}
+
 variable "phoenix_ip" {
   description = "LAN IP of the phoenix Proxmox host"
   type        = string

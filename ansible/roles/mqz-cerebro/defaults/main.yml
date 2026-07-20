@@ -35,6 +35,8 @@ cerebro_manage_the_collector_takeover: true
 cerebro_manage_channels_remote_takeover: true
 # One-time takeover of pre-Ansible adbtuner container + named-volume → bind-mount migration (safe no-op after)
 cerebro_manage_adbtuner_takeover: true
+# Template the Caddyfile before deploy (independent of the 60-caddy fragment being enabled)
+cerebro_manage_caddy_config: true
 
 # Which hostname's fragments to merge. Defaults to `cerebro` so molecule
 # scenarios using different inventory hostnames still find the fragments.
@@ -97,5 +99,14 @@ cerebro_service_dirs:
     puid: "{{ cerebro_puid }}"
     pgid: "{{ cerebro_pgid }}"
   - path: codeserver/workspace
+    puid: "{{ cerebro_puid }}"
+    pgid: "{{ cerebro_pgid }}"
+  - path: caddy/config
+    puid: "{{ cerebro_puid }}"
+    pgid: "{{ cerebro_pgid }}"
+  - path: caddy/data
+    puid: "{{ cerebro_puid }}"
+    pgid: "{{ cerebro_pgid }}"
+  - path: caddy/site-config
     puid: "{{ cerebro_puid }}"
     pgid: "{{ cerebro_pgid }}"

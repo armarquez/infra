@@ -1,0 +1,15 @@
+---
+# Template the Caddyfile before Caddy starts.
+#
+# Runs whether or not the 60-caddy compose fragment is enabled — the
+# template step is cheap and having the file in place lets a manual
+# `docker compose up` (or a later run after removing 60-caddy from
+# disabled_compose_files) work with no extra setup.
+
+- name: Template Caddyfile onto cerebro
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: "{{ cerebro_docker_root }}/caddy/config/Caddyfile"
+    owner: "{{ cerebro_puid }}"
+    group: "{{ cerebro_pgid }}"
+    mode: "0644"

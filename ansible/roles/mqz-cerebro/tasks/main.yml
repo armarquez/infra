@@ -58,6 +58,10 @@
     - cerebro_manage_deploy | default(true)
     - cerebro_manage_adbtuner_takeover | default(true)
 
+- name: Template Caddyfile (pre-deploy)
+  ansible.builtin.include_tasks: caddy.yml
+  when: cerebro_manage_caddy_config | default(true)
+
 - name: Deploy merged compose stack
   ansible.builtin.include_tasks: deploy.yml
   when: cerebro_manage_deploy | default(true)

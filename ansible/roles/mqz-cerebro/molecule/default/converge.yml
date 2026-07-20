@@ -34,5 +34,7 @@
     # No channels-remote / adbtuner running in molecule → skip takeover checks
     cerebro_manage_channels_remote_takeover: false
     cerebro_manage_adbtuner_takeover: false
+    # No Caddy in molecule, and templating would require a vault-sourced email var
+    cerebro_manage_caddy_config: false
   roles:
     - role: mqz-cerebro

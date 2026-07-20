@@ -1,0 +1,18 @@
+services:
+  caddy:
+    # Custom Caddy image with the Cloudflare DNS plugin baked in — needed
+    # for the DNS-01 ACME challenge that provisions the *.mqz.casa cert.
+    image: serfriz/caddy-cloudflare-dns:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    environment:
+      TZ: "{{ cerebro_timezone }}"
+      CLOUDFLARE_API_TOKEN: "{{ cloudflare_caddy_api_token }}"
+    volumes:
+      - "{{ cerebro_docker_root }}/caddy/config:/etc/caddy"
+      - "{{ cerebro_docker_root }}/caddy/data:/data"
+      - "{{ cerebro_docker_root }}/caddy/site-config:/config"

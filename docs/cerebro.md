@@ -48,7 +48,7 @@ Current fragment / service state:
 
 | Fragment | Currently running as | Ansible status | Blocker |
 |---|---|---|---|
-| `00-portainer` | *(was killed by our earlier failed run)* | **Enabled** | — |
+| `01-portainer` | `portainer` | **Enabled** | — |
 | `40-syncthing` | *(new — never ran)* | **Enabled** | — |
 | `00-acme-sh` | `acme.sh` (Portainer) | disabled | Cloudflare + certadmin secrets needed in vault |
 | `10-channels-dvr` | `channels-dvr-eplustv-1`, `pluto-for-channels` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose | — |
@@ -59,6 +59,7 @@ Current fragment / service state:
 | `50-the-collector` | `nzbget`, `deluge`, `sonarr`, `radarr` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose. `nzbget_password` templated from vault. | — |
 | `13-channels-remote` | `channels-remote` | **Enabled** — stateless takeover; project label was `channels-app-remote-plus` | — |
 | `14-adbtuner` | `adbtuner` | **Enabled** — takeover + one-time migration of the Docker named volume `adbtuner_config` to a bind mount at `/volume1/docker/adbtuner/config` | — |
+| `09-caddy` | *(new — interim on cerebro)* | disabled | interim TLS reverse proxy; verify `cloudflare_caddy_api_token` in vault, then remove `09-caddy` from `disabled_compose_files`. Migrate to phoenix long-term. |
 
 The `disabled_compose_files` list in `ansible/group_vars/cerebro.yaml` is the switch — remove an entry once the corresponding takeover is written.
 
