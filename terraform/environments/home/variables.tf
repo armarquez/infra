@@ -44,8 +44,9 @@ variable "cloudflare_api_token" {
 }
 
 variable "cloudflare_zone_id" {
-  description = "Cloudflare Zone ID for mqz.casa (found on the zone overview page)"
+  description = "Cloudflare Zone ID for mqz.casa. Not a secret — it's a stable public identifier exposed in every dashboard URL and API response. Hardcoded here so Terraform doesn't need to reach into vault for non-secret config."
   type        = string
+  default     = "620d2974a3fe57accabead351efec71a"
 }
 
 # Shared infrastructure values

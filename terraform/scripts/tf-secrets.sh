@@ -47,8 +47,10 @@ emit() {
 
 # Currently in use by terraform/environments/home:
 emit cloudflare_api_token cloudflare_caddy_api_token
-emit cloudflare_zone_id   cloudflare_zone_id
 
+# Non-secret Terraform config (endpoints, zone IDs, node names) lives in
+# variables.tf defaults — do NOT emit them here.
+#
 # Not yet in use — uncomment as terraform starts to manage the corresponding
 # resources. Each vault key on the right must exist in secrets.yaml.
 # emit proxmox_api_token             proxmox_terraform_api_token
