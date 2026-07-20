@@ -59,7 +59,7 @@ Current fragment / service state:
 | `50-the-collector` | `nzbget`, `deluge`, `sonarr`, `radarr` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose. `nzbget_password` templated from vault. | — |
 | `13-channels-remote` | `channels-remote` | **Enabled** — stateless takeover; project label was `channels-app-remote-plus` | — |
 | `14-adbtuner` | `adbtuner` | **Enabled** — takeover + one-time migration of the Docker named volume `adbtuner_config` to a bind mount at `/volume1/docker/adbtuner/config` | — |
-| `09-caddy` | *(new — interim on cerebro)* | disabled | interim TLS reverse proxy; verify `cloudflare_caddy_api_token` in vault, then remove `09-caddy` from `disabled_compose_files`. Migrate to phoenix long-term. |
+| `09-caddy` | `caddy` | **Enabled** — interim TLS reverse proxy on cerebro. Bound to host ports **8880 (HTTP)** and **4443 (HTTPS)** because DSM's own nginx owns 80/443. Access via `https://code.mqz.casa:4443` / `https://syncthing.mqz.casa:4443`. Migrate to phoenix (which will get 80/443) long-term. | — |
 
 The `disabled_compose_files` list in `ansible/group_vars/cerebro.yaml` is the switch — remove an entry once the corresponding takeover is written.
 
