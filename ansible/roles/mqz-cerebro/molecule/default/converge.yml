@@ -31,5 +31,8 @@
     cerebro_manage_iptv_boss_takeover: false
     # No the-collector containers running in molecule → skip takeover check
     cerebro_manage_the_collector_takeover: false
+    # No channels-remote / adbtuner running in molecule → skip takeover checks
+    cerebro_manage_channels_remote_takeover: false
+    cerebro_manage_adbtuner_takeover: false
   roles:
     - role: mqz-cerebro

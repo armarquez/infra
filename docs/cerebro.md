@@ -54,10 +54,11 @@ Current fragment / service state:
 | `10-channels-dvr` | `channels-dvr-eplustv-1`, `pluto-for-channels` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose | — |
 | `11-iptv-boss` | `iptv-boss-iptvboss-1` | **Enabled** — pre-Ansible container removed on first run, replaced by compose | — |
 | `12-olivetin-channels` | `olivetin`, `static-file-server` (Portainer) | disabled | broken `version: '3.9'` stanza + `${PORTAINER_TOKEN}` interpolation |
-| `20-codeserver` | *(none)* | disabled | empty stub |
+| `20-codeserver` | *(new — never ran)* | disabled | needs `codeserver_password` + `codeserver_sudo_password` in vault; then remove from `disabled_compose_files` |
 | `30-calibre` | `calibre-web-automated` | **Enabled** — pre-Ansible container removed on first run, replaced by compose (bind-mount data preserved) | — |
 | `50-the-collector` | `nzbget`, `deluge`, `sonarr`, `radarr` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose. `nzbget_password` templated from vault. | — |
-| *(no fragment yet)* | `channels-remote`, `adbtuner` (DSM Container Manager individual containers) | **needs new fragment** | — |
+| `13-channels-remote` | `channels-remote` | **Enabled** — stateless takeover; project label was `channels-app-remote-plus` | — |
+| `14-adbtuner` | `adbtuner` | **Enabled** — takeover + one-time migration of the Docker named volume `adbtuner_config` to a bind mount at `/volume1/docker/adbtuner/config` | — |
 
 The `disabled_compose_files` list in `ansible/group_vars/cerebro.yaml` is the switch — remove an entry once the corresponding takeover is written.
 

@@ -1,1 +1,17 @@
 services:
+  codeserver:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: codeserver
+    environment:
+      PUID: "{{ cerebro_puid }}"
+      PGID: "{{ cerebro_pgid }}"
+      TZ: "{{ cerebro_timezone }}"
+      PASSWORD: "{{ codeserver_password }}"
+      SUDO_PASSWORD: "{{ codeserver_sudo_password }}"
+      DEFAULT_WORKSPACE: /workspace
+    volumes:
+      - "{{ cerebro_docker_root }}/codeserver/config:/config"
+      - "{{ cerebro_docker_root }}/codeserver/workspace:/workspace"
+    ports:
+      - 8443:8443
+    restart: unless-stopped

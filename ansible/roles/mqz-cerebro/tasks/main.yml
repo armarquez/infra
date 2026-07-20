@@ -46,6 +46,18 @@
     - cerebro_manage_deploy | default(true)
     - cerebro_manage_the_collector_takeover | default(true)
 
+- name: Channels-remote takeover (pre-deploy)
+  ansible.builtin.include_tasks: channels_remote.yml
+  when:
+    - cerebro_manage_deploy | default(true)
+    - cerebro_manage_channels_remote_takeover | default(true)
+
+- name: Adbtuner takeover + volume→bind-mount migration (pre-deploy)
+  ansible.builtin.include_tasks: adbtuner.yml
+  when:
+    - cerebro_manage_deploy | default(true)
+    - cerebro_manage_adbtuner_takeover | default(true)
+
 - name: Deploy merged compose stack
   ansible.builtin.include_tasks: deploy.yml
   when: cerebro_manage_deploy | default(true)

@@ -14,7 +14,7 @@
 disabled_compose_files:
   - 00-acme-sh              # secrets not in vault; conflicts with running acme.sh
   - 12-olivetin-channels    # deprecated version stanza + PORTAINER_TOKEN interpolation broken
-  - 20-codeserver           # empty stub
+  - 20-codeserver           # needs codeserver_password + codeserver_sudo_password in vault before enabling
 
 # mqz-cerebro role vars
 #
