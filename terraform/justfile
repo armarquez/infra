@@ -3,30 +3,38 @@ default:
 
 env := "home"
 
-# Initialize Terraform providers for an environment
-init:
-  terraform -chdir=environments/{{env}} init
-
-# Show planned changes without applying
-plan:
-  terraform -chdir=environments/{{env}} plan
-
-# Apply planned changes
-apply:
-  terraform -chdir=environments/{{env}} apply
-
-# Destroy all managed resources in an environment
-destroy:
-  terraform -chdir=environments/{{env}} destroy
+# --- Static recipes: no vault access needed ---
 
 # Format all .tf files
 fmt:
-  terraform fmt -recursive
+  tofu fmt -recursive
 
 # Validate configuration syntax
 validate:
-  terraform -chdir=environments/{{env}} validate
+  tofu -chdir=environments/{{env}} validate
 
 # Show current state
 show:
-  terraform -chdir=environments/{{env}} show
+  tofu -chdir=environments/{{env}} show
+
+# --- Stateful recipes: bridge TF_VAR_* from Ansible Vault per-command ---
+
+# Initialize providers (run after adding/changing providers)
+init: (_with-secrets "init")
+
+# Show planned changes without applying
+plan: (_with-secrets "plan")
+
+# Apply planned changes
+apply: (_with-secrets "apply")
+
+# Destroy all managed resources in an environment
+destroy: (_with-secrets "destroy")
+
+# Sources TF_VAR_* from vault via scripts/tf-secrets.sh, then invokes tofu.
+# Secrets live in this subprocess's env only — never on disk, never in shell.
+_with-secrets CMD:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  eval "$({{justfile_directory()}}/scripts/tf-secrets.sh)"
+  tofu -chdir=environments/{{env}} {{CMD}}
