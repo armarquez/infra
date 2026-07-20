@@ -10,9 +10,22 @@ Home infrastructure repository using Infrastructure as Code for two physical mac
 - `phoenix` — Proxmox hypervisor host (192.168.1.240)
 - `cerebro` — Synology NAS / storage-adjacent services host (192.168.1.250)
 
-**Tools**: Ansible (config management), Terraform (VM/LXC provisioning), Just (command runner), 1Password CLI + Ansible Vault (secrets), Molecule + Docker (Ansible testing), GitHub Actions (CI).
+**Tools**: Ansible (config management), OpenTofu (VM/LXC provisioning + DNS), Just (command runner), 1Password CLI + Ansible Vault (secrets), Molecule + Docker (Ansible testing), GitHub Actions (CI).
 
 **Architecture docs**: [docs/infrastructure-target-architecture.md](./docs/infrastructure-target-architecture.md) is the source of truth for service placement, guiding principles, decisions, and roadmap. This file (CLAUDE.md) covers day-to-day operational commands and workflows.
+
+## Toolchain philosophy
+
+**Minimal host deps, pin the rest in-repo.** A fresh clone should be productive with only these installed on the host:
+
+1. `git`
+2. `direnv`
+3. `mise`
+4. 1Password CLI (`op` or `op.exe` on WSL)
+
+Everything else — `just`, `opentofu`, `yq`, and any future CLI tooling — is pinned in `mise.toml` at repo root and installed via `mise install`. When adding a new tool to the workflow, add it to `mise.toml` rather than documenting a separate install step. When bumping a version, look up the current stable release on GitHub (do not guess from memory).
+
+Corollary: don't wrap install of a new tool in a `just install-<tool>` recipe unless the tool cannot be handled by mise (mise's registry is broad — `mise registry | grep <tool>` first).
 
 ## Pre-commit Hooks
 
@@ -148,12 +161,17 @@ just images status             # Show ISO and answer file status
 ```
 
 ### Terraform (run via `just terraform <recipe>`)
+
+The `terraform` subsystem uses **OpenTofu** (`tofu` binary — installed via mise from `mise.toml`). All state-touching recipes (`init`/`plan`/`apply`/`destroy`) source their `TF_VAR_*` from Ansible Vault at command time via `terraform/scripts/tf-secrets.sh` — no `.tfvars`, no exports in `.envrc`. See Secret Management below.
+
 ```bash
 just terraform init     # Initialize providers (run after adding/changing providers)
 just terraform plan     # Show planned changes
 just terraform apply    # Apply changes
+just terraform destroy  # Destroy all managed resources in an environment
 just terraform fmt      # Format all .tf files
 just terraform validate # Validate configuration syntax
+just terraform show     # Show current state
 ```
 
 ### Incus (optional — requires Linux dev machine with Incus installed)
@@ -193,12 +211,14 @@ When adding a new role, create a molecule scenario with the same structure. Task
 - `~/bin/op-vault` calls the 1Password CLI to retrieve the vault password at runtime
 - Most `ansible/justfile` recipes depend on `check-op`, which supports both `op` (Linux/Mac) and `op.exe` (WSL)
 - Proxmox ISO builds extract `initial_password` from vault via `images/scripts/get-vault-password.sh`
+- Terraform reads `TF_VAR_*` from vault via `terraform/scripts/tf-secrets.sh` (invoked by the `_with-secrets` wrapper in `terraform/justfile`)
 - Molecule CI tests define variables directly in `converge.yml` — no vault access needed in CI
 
 **Secrets that must exist in `secrets.yaml`**:
 - `initial_password` — used for Proxmox ISO unattended install and initial Ansible connection
 - `tailscale_authkey` — Tailscale auth key for `mqz-tailscale` role
-- `cloudflare_caddy_api_token` — Cloudflare API token for Caddy DNS-01 challenge
+- `cloudflare_caddy_api_token` — Cloudflare API token for Caddy DNS-01 challenge and Terraform Cloudflare provider
+- `cloudflare_zone_id` — Cloudflare Zone ID for `mqz.casa` (used by Terraform DNS records; not secret but centralized here for uniformity)
 - `plex_claim_token` — Plex claim token (expires in 4 minutes; get from plex.tv/claim)
 
 ### Ansible Structure
@@ -216,7 +236,7 @@ Terraform is organized by environment under `terraform/environments/`. The `home
 - Tailscale VPN config via `tailscale/tailscale` provider
 - Cloudflare DNS records via `cloudflare/cloudflare` provider
 
-Provider credentials are passed via `TF_VAR_*` environment variables (set in `terraform/.envrc`, which is gitignored). Never use `*.tfvars` files with real secrets.
+Provider credentials are sourced from Ansible Vault (`ansible/group_vars/secrets.yaml`) at command time by `terraform/scripts/tf-secrets.sh`, which decrypts the vault and emits `export TF_VAR_*=...` lines for the justfile's `_with-secrets` wrapper to `eval`. This keeps a single source of truth: no `.tfvars` files, no `TF_VAR_*` exports in `.envrc`, no duplicate items in 1Password. To add a new provider credential, add its key to `secrets.yaml` (via `just ansible vault edit`) and add an `emit <tf_var> <vault_key>` line in `terraform/scripts/tf-secrets.sh`.
 
 ### Proxmox Installation (phoenix)
 
