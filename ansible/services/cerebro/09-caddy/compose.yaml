@@ -2,7 +2,11 @@ services:
   caddy:
     # Custom Caddy image with the Cloudflare DNS plugin baked in — needed
     # for the DNS-01 ACME challenge that provisions the *.mqz.casa cert.
-    image: serfriz/caddy-cloudflare-dns:latest
+    # `serfriz/caddy-cloudflare-dns` (the original choice) was removed from
+    # Docker Hub; swapped to `iarekylew00t/caddy-cloudflare` which is
+    # actively maintained by an xcaddy-adjacent maintainer and exposes the
+    # same `CLOUDFLARE_API_TOKEN` env-var convention.
+    image: iarekylew00t/caddy-cloudflare:latest
     container_name: caddy
     restart: unless-stopped
     ports:
