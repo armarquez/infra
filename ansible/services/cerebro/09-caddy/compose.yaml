@@ -9,14 +9,15 @@ services:
     image: iarekylew00t/caddy-cloudflare:latest
     container_name: caddy
     restart: unless-stopped
-    # Host-side alt ports because DSM's nginx already owns 80/443 on cerebro
-    # (Application Portal default listener). 8443 is not usable either —
-    # code-server binds it. When Caddy moves to phoenix (no DSM there),
-    # remap back to 80/443 for clean URLs.
-    ports:
-      - 8880:80
-      - 4443:443
-      - 4443:443/udp
+    # Host network preserves real client source IPs so the Caddyfile's
+    # LAN + Tailscale allowlist (`@denied not remote_ip ...`) works. Under
+    # Docker bridge networking, Synology's Container Manager rewrites the
+    # source IP to the Docker bridge gateway, which would block every
+    # legit client. Host mode has no `ports:` block — Caddy binds directly
+    # to the ports declared in the Caddyfile global block (http_port,
+    # https_port). DSM's nginx still owns 80/443, so Caddy uses 8880/4443
+    # per the alt-ports scheme from PR #54.
+    network_mode: host
     environment:
       TZ: "{{ cerebro_timezone }}"
       CLOUDFLARE_API_TOKEN: "{{ cloudflare_caddy_api_token }}"

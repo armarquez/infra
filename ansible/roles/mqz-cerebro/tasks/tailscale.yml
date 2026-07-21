@@ -1,0 +1,22 @@
+---
+# Advertise LAN subnet routes from cerebro's Tailscale so off-LAN tailnet
+# clients can reach 192.168.1.x hosts (including cerebro's own Caddy) via
+# cerebro as a subnet router. Idempotent — `tailscale set` no-ops when the
+# flag value matches the current daemon state.
+#
+# Manual follow-up after first run: user must approve the new subnet route
+# in the Tailscale admin console
+# (https://login.tailscale.com/admin/machines → cerebro → Edit route settings).
+# Ansible cannot approve it — that's a tailnet-level ACL action.
+#
+# Long-term: when phoenix is provisioned as a subnet router, drop this task
+# (or empty `cerebro_tailscale_advertise_routes`) so the advertisement moves
+# to phoenix.
+
+- name: Advertise LAN subnet route from cerebro's Tailscale
+  become: true
+  ansible.builtin.command:
+    cmd: >-
+      /var/packages/Tailscale/target/bin/tailscale set
+      --advertise-routes={{ cerebro_tailscale_advertise_routes | join(',') }}
+  changed_when: false
