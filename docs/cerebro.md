@@ -59,9 +59,20 @@ Current fragment / service state:
 | `50-the-collector` | `nzbget`, `deluge`, `sonarr`, `radarr` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose. `nzbget_password` templated from vault. | — |
 | `13-channels-remote` | `channels-remote` | **Enabled** — stateless takeover; project label was `channels-app-remote-plus` | — |
 | `14-adbtuner` | `adbtuner` | **Enabled** — takeover + one-time migration of the Docker named volume `adbtuner_config` to a bind mount at `/volume1/docker/adbtuner/config` | — |
-| `09-caddy` | `caddy` | **Enabled** — interim TLS reverse proxy on cerebro. Bound to host ports **8880 (HTTP)** and **4443 (HTTPS)** because DSM's own nginx owns 80/443. Access via `https://code.mqz.casa:4443` / `https://syncthing.mqz.casa:4443`. Migrate to phoenix (which will get 80/443) long-term. | — |
+| `09-caddy` | `caddy` | **Enabled** — interim TLS reverse proxy on cerebro. Runs with `network_mode: host` on ports **8880 (HTTP)** and **4443 (HTTPS)** because DSM's own nginx owns 80/443. Access restricted to LAN + Tailscale — see [Caddy access control](#caddy-access-control) below. Migrate to phoenix (which will get 80/443) long-term. | — |
 
 The `disabled_compose_files` list in `ansible/group_vars/cerebro.yaml` is the switch — remove an entry once the corresponding takeover is written.
+
+### Caddy access control
+
+Caddy on cerebro enforces an IP allowlist at the site level — requests whose source IP is not in one of `cerebro_caddy_allowed_cidrs` (default `192.168.1.0/24`, `100.64.0.0/10`) get a 403. This is defense-in-depth: the DNS records for `*.mqz.casa` are public, so the allowlist prevents accidental exposure if the network edge were ever misconfigured.
+
+Two runtime prerequisites for the allowlist to work correctly:
+
+- **Host networking**: the compose fragment sets `network_mode: host` so Caddy sees real client source IPs. Under DSM's default bridge networking, the source IP is rewritten to the Docker bridge gateway (~172.17.0.1) and every legit client would be blocked.
+- **Cerebro advertises `192.168.1.0/24` as a Tailscale subnet route** (managed by `roles/mqz-cerebro/tasks/tailscale.yml`). Off-LAN tailscale clients keep using the same `https://code.mqz.casa:4443` URL — traffic reaches cerebro over the tailnet as if it were on-LAN. **First-time-only manual step**: approve the route in the [Tailscale admin console](https://login.tailscale.com/admin/machines) → cerebro → Edit route settings.
+
+When Caddy moves to phoenix later, the same allowlist pattern applies; the subnet-route advertisement moves to phoenix and the cerebro-side value in `cerebro_tailscale_advertise_routes` empties out.
 
 ### Troubleshooting
 

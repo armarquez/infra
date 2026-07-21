@@ -62,6 +62,10 @@
   ansible.builtin.include_tasks: caddy.yml
   when: cerebro_manage_caddy_config | default(true)
 
+- name: Advertise LAN subnet route from cerebro's Tailscale
+  ansible.builtin.include_tasks: tailscale.yml
+  when: cerebro_manage_tailscale_routes | default(true)
+
 - name: Deploy merged compose stack
   ansible.builtin.include_tasks: deploy.yml
   when: cerebro_manage_deploy | default(true)
