@@ -49,7 +49,7 @@ Current fragment / service state:
 | Fragment | Currently running as | Ansible status | Blocker |
 |---|---|---|---|
 | `01-portainer` | `portainer` | **Enabled** | — |
-| `40-syncthing` | *(new — never ran)* | **Enabled** | — |
+| `40-syncthing` | `syncthing` | **Enabled** — GUI reached via Caddy at `https://syncthing.mqz.casa:4443`. Post-deploy `tasks/syncthing.yml` enforces GUI authentication (user `syncthing_gui_user`, password `syncthing_gui_password` from vault) via the REST API — the fragment runs with `network_mode: host` so the default LAN-open GUI would otherwise be reachable without any credentials. | — |
 | `00-acme-sh` | `acme.sh` (Portainer) | disabled | Cloudflare + certadmin secrets needed in vault |
 | `10-channels-dvr` | `channels-dvr-eplustv-1`, `pluto-for-channels` | **Enabled** — pre-Ansible containers removed on first run, replaced by compose | — |
 | `11-iptv-boss` | `iptv-boss-iptvboss-1` | **Enabled** — pre-Ansible container removed on first run, replaced by compose | — |
