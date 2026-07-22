@@ -25,3 +25,7 @@ services:
       - "{{ cerebro_docker_root }}/caddy/config:/etc/caddy"
       - "{{ cerebro_docker_root }}/caddy/data:/data"
       - "{{ cerebro_docker_root }}/caddy/site-config:/config"
+      # Access logs — file destination for the global `log` directive in
+      # the Caddyfile. Bind-mount lets us tail from the host without
+      # exec-ing into the container.
+      - "{{ cerebro_docker_root }}/caddy/logs:/var/log/caddy"

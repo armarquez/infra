@@ -74,6 +74,23 @@ Two runtime prerequisites for the allowlist to work correctly:
 
 When Caddy moves to phoenix later, the same allowlist pattern applies; the subnet-route advertisement moves to phoenix and the cerebro-side value in `cerebro_tailscale_advertise_routes` empties out.
 
+### Caddy access logs
+
+Every request handled by Caddy (including 403 responses from the allowlist matcher) is logged as JSON to `/volume1/docker/caddy/logs/access.log` on cerebro. Rotation: 10 MB per file, 10 files kept, up to 30 days retention.
+
+```bash
+# Tail live
+ssh krakoa@cerebro sudo tail -f /volume1/docker/caddy/logs/access.log
+
+# Filter denials (source IP outside the allowlist → HTTP 403)
+ssh krakoa@cerebro sudo jq -c 'select(.status == 403)' /volume1/docker/caddy/logs/access.log
+
+# Requests grouped by client IP
+ssh krakoa@cerebro sudo jq -r '.request.remote_ip' /volume1/docker/caddy/logs/access.log | sort | uniq -c | sort -rn
+```
+
+No log aggregation yet — this is per-host observability. If we add Loki/Promtail later, JSON output is directly ingestible with no reformat.
+
 ### Troubleshooting
 
 The `just ansible troubleshoot` recipe is a shared entry point for ad-hoc diagnostics — it invokes whichever script is currently useful. Today it points at `scripts/troubleshoot-cerebro.sh`, a read-only dump of docker CLI availability under sudo, home dir resolution, existing containers + compose-project labels, `/volume1/docker/*` ownership, sudoers, and Python venv state. Output tees to `/tmp/cerebro-troubleshoot.log`. Paste that log when debugging a failed `just ansible run cerebro`.
