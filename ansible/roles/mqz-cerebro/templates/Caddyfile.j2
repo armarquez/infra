@@ -8,6 +8,19 @@
     # sites when no explicit port is given in the site address).
     http_port 8880
     https_port 4443
+
+    # Access logs — JSON output so future log aggregation (Loki, etc.) can
+    # ingest cleanly. Tail on cerebro at /volume1/docker/caddy/logs/access.log
+    # (bind-mounted from /var/log/caddy inside the container). `log default`
+    # sets the logger for every site block below; no per-site override needed.
+    log default {
+        output file /var/log/caddy/access.log {
+            roll_size 10mb
+            roll_keep 10
+            roll_keep_for 720h
+        }
+        format json
+    }
 }
 
 # Reject requests whose source IP is outside the LAN or Tailscale networks.

@@ -132,3 +132,6 @@ cerebro_service_dirs:
   - path: caddy/site-config
     puid: "{{ cerebro_puid }}"
     pgid: "{{ cerebro_pgid }}"
+  - path: caddy/logs
+    puid: "{{ cerebro_puid }}"
+    pgid: "{{ cerebro_pgid }}"
