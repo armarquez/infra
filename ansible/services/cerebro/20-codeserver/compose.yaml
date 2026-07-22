@@ -12,6 +12,11 @@ services:
     volumes:
       - "{{ cerebro_docker_root }}/codeserver/config:/config"
       - "{{ cerebro_docker_root }}/codeserver/workspace:/workspace"
+    # Bind to loopback only — external clients reach code-server through
+    # Caddy on cerebro's :4443 with LAN + Tailscale allowlist enforcement.
+    # Caddy runs with network_mode: host, so its `reverse_proxy
+    # http://localhost:8443` still works. Publishing on 0.0.0.0 would let
+    # anyone on the LAN bypass Caddy (no allowlist, self-signed cert).
     ports:
-      - 8443:8443
+      - 127.0.0.1:8443:8443
     restart: unless-stopped
