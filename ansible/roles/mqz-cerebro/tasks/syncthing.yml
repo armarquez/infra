@@ -24,6 +24,51 @@
     syncthing_api_key: "{{ syncthing_config_xml.content | b64decode | regex_search('<apikey>([^<]+)</apikey>', '\\1') | first }}"
     syncthing_local_device_id: "{{ syncthing_config_xml.content | b64decode | regex_search('<device id=\"([^\"]+)\"', '\\1') | first }}"
 
+# GUI auth must be enforced before we touch anything else — the Syncthing
+# default is an unauthenticated GUI on LAN, and we now expose it through
+# Caddy at syncthing.mqz.casa. Fail hard if the vault password is missing
+# rather than deploying a wide-open GUI.
+- name: Assert Syncthing GUI password is defined in vault
+  ansible.builtin.assert:
+    that: syncthing_gui_password is defined and syncthing_gui_password | length > 0
+    fail_msg: >-
+      syncthing_gui_password is not defined. Add it to
+      ansible/group_vars/secrets.yaml via `just ansible vault edit` before
+      re-running.
+
+- name: Read current Syncthing GUI config
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}:8384/rest/config/gui"
+    method: GET
+    headers:
+      X-API-Key: "{{ syncthing_api_key }}"
+    status_code: 200
+  register: syncthing_gui_current
+
+- name: Enforce Syncthing GUI authentication (user + password + basic-auth prompt)
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}:8384/rest/config/gui"
+    method: PUT
+    headers:
+      X-API-Key: "{{ syncthing_api_key }}"
+    body_format: json
+    # Merge into current config so we preserve fields we don't manage
+    # (apikey, theme, sessionCookieDurationS, tls, etc.).
+    body: >-
+      {{ syncthing_gui_current.json | combine({
+           'user': syncthing_gui_user,
+           'password': syncthing_gui_password,
+           'sendBasicAuthPrompt': true
+         }) }}
+    status_code: [200, 204]
+  # Syncthing bcrypts the plaintext password on every PUT (fresh salt), so
+  # this task always registers a change from Syncthing's side even when the
+  # cleartext hasn't rotated. Suppress the noise — the user only rotates
+  # the password by editing the vault, at which point applying is the
+  # intended behavior anyway.
+  changed_when: false
+  no_log: true
+
 # Devices must be upserted before folders, since folders reference device IDs.
 - name: Upsert Syncthing peer devices
   ansible.builtin.uri:

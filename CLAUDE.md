@@ -219,6 +219,7 @@ When adding a new role, create a molecule scenario with the same structure. Task
 - `tailscale_authkey` — Tailscale auth key for `mqz-tailscale` role
 - `cloudflare_caddy_api_token` — Cloudflare API token for Caddy DNS-01 challenge and Terraform Cloudflare provider
 - `plex_claim_token` — Plex claim token (expires in 4 minutes; get from plex.tv/claim)
+- `syncthing_gui_password` — Syncthing GUI login password (mqz-cerebro role fails hard if this is missing to avoid deploying an unauthenticated GUI)
 
 Non-secret Terraform config (Cloudflare Zone ID, endpoints, node names) lives in `terraform/environments/<env>/variables.tf` as `default = "..."`, not in vault.
 

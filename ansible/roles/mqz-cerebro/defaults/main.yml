@@ -54,6 +54,12 @@ cerebro_caddy_allowed_cidrs:
 cerebro_tailscale_advertise_routes:
   - 192.168.1.0/24
 
+# Syncthing GUI authentication — enforced by tasks/syncthing.yml on every
+# ansible run. Overrides Syncthing's default (LAN-open GUI). The password
+# comes from vault as `syncthing_gui_password` (must be defined; the task
+# fails hard rather than deploying an unauthenticated GUI).
+syncthing_gui_user: krakoa
+
 # Which hostname's fragments to merge. Defaults to `cerebro` so molecule
 # scenarios using different inventory hostnames still find the fragments.
 cerebro_compose_hostname: cerebro
