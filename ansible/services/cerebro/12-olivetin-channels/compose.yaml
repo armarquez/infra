@@ -1,6 +1,5 @@
-version: '3.9'
 services:
-  olivetin-channels: # This docker-compose typically requires no editing. Use the Environment variables section of Portainer to set your values.
+  olivetin-channels:
     # 2025.03.27
     # GitHub home for this project: https://github.com/bnhf/OliveTin.
     # Docker container home for this project with setup instructions: https://hub.docker.com/r/bnhf/olivetin.
@@ -22,7 +21,7 @@ services:
       - UPDATE_YAMLS=true # Set this to true to update config.yaml.
       - UPDATE_SCRIPTS=true # Set this to true to update all included scripts.
       - TZ=America/Phoenix # Add your local timezone in standard linux format. E.G. US/Eastern, US/Central, US/Mountain, US/Pacific, etc.
-      - PORTAINER_TOKEN=${PORTAINER_TOKEN} # Generate via <username> dropdown (upper right of WebUI), "My account", API tokens.
+      - PORTAINER_TOKEN={{ portainer_token }} # Generate in Portainer: <username> dropdown → My account → API tokens; store in vault as `portainer_token`.
       - PORTAINER_HOST=192.168.1.250 # Hostname or IP of the Docker host you're running Portainer on.
       - PORTAINER_PORT=9443 # https port you're running Portainer on. 9443 is the default.
       - PORTAINER_ENV=13370 # Set this is if you're using an alternate Portainer Environment for some reason. 2 is the default.

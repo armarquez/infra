@@ -11,9 +11,13 @@ services:
     environment:
       PUID: "1030"
       PGID: "101"
-      CF_Token: "<CLOUDFLARE_API_TOKEN>"
+      # acme.sh talks to Cloudflare's DNS API for the ACME DNS-01 challenge
+      # and then pushes the resulting cert into DSM's Certificate Manager
+      # via the `certadmin` account (SYNO_* env vars are acme.sh's DSM
+      # deploy-hook contract).
+      CF_Token: "{{ cloudflare_dns_api_token }}"
       SYNO_USERNAME: "certadmin"
-      SYNO_PASSWORD: "<CERTADMIN_PASSWORD>"
+      SYNO_PASSWORD: "{{ certadmin_password }}"
       SYNO_CERTIFICATE: "Let's Encrypt"
       SYNO_CREATE: 1
       SYNO_SCHEME: "https"
