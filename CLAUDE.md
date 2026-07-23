@@ -221,7 +221,18 @@ When adding a new role, create a molecule scenario with the same structure. Task
 - `plex_claim_token` — Plex claim token (expires in 4 minutes; get from plex.tv/claim)
 - `syncthing_gui_password` — Syncthing GUI login password (mqz-cerebro role fails hard if this is missing to avoid deploying an unauthenticated GUI)
 
+**Only needed if the corresponding disabled compose fragment is enabled** (currently listed in `ansible/group_vars/cerebro.yaml → disabled_compose_files`):
+- `cloudflare_dns_api_token` — Cloudflare token for `00-acme-sh` DNS-01 challenge (can reuse the same value as `cloudflare_caddy_api_token` if it has `Zone:DNS:Edit` for `mqz.casa`)
+- `certadmin_password` — DSM `certadmin` account password used by `00-acme-sh` to deploy the cert into Synology's Certificate Manager
+- `portainer_token` — Portainer API token used by `12-olivetin-channels` (generate at Portainer → username menu → My account → API tokens)
+
 Non-secret Terraform config (Cloudflare Zone ID, endpoints, node names) lives in `terraform/environments/<env>/variables.tf` as `default = "..."`, not in vault.
+
+**Historical secret leaks (rotation required, not just removal)**: any secret ever committed to this repo lives in git history forever unless we rewrite. Rotating the leaked value at the source is the actual security fix.
+
+- **CRONITOR_API_KEY** (starts `1f16af43…`) was committed in `2971a29` (initial cerebro service dump) and removed from HEAD in [PR #24](https://github.com/armarquez/infra/pull/24). Still visible via `git log -p -S CRONITOR_API_KEY`. **This key must be rotated at cronitor.io/dashboard — HEAD-removal alone doesn't invalidate the exposed value.** Tracked as [#14](https://github.com/armarquez/infra/issues/14).
+
+Prevention going forward: `gitleaks` runs as a pre-commit hook (`.pre-commit-config.yaml`) and blocks committing anything that looks like a secret. Install once per clone with `just install-hooks`.
 
 ### Ansible Structure
 

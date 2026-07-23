@@ -22,3 +22,12 @@ repos:
     rev: v1.7.12
     hooks:
       - id: actionlint
+
+  # Secret scanner — blocks staged changes that look like API tokens, keys,
+  # or high-entropy strings. Won't retroactively purge history (see issue for
+  # the Cronitor key that leaked in `2971a29` before this hook existed and
+  # still lives in git history).
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks

@@ -12,8 +12,12 @@
 # UIDs confirmed via `id boogey` (1026), `id the-collector` (1028),
 # `id krakoa` (1032) on cerebro.
 disabled_compose_files:
-  - 00-acme-sh              # secrets not in vault; conflicts with running acme.sh
-  - 12-olivetin-channels    # deprecated version stanza + PORTAINER_TOKEN interpolation broken
+  # Vault-templated (needs cloudflare_dns_api_token + certadmin_password in vault
+  # before enabling). Still disabled pending the "keep acme.sh vs use Caddy" decision.
+  - 00-acme-sh
+  # Vault-templated (needs portainer_token in vault before enabling). Still
+  # disabled pending the "still using OliveTin?" decision.
+  - 12-olivetin-channels
 
 # mqz-cerebro role vars
 #
